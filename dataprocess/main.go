@@ -11,10 +11,10 @@ import (
 
 func GetHistoryData(param models.ParamsTripHistorydata, _sn *mgo.Session) (result datamodel.SegmentWrapper, err error) {
 
-	data, _ := models.GetStoredHistory(param.Vhid, param.FromDt, _sn)
-	if len(data.Segments) > 0 {
-		return data, nil
-	}
+	// data, _ := models.GetStoredHistory(param.Vhid, param.FromDt, _sn)
+	// if len(data.Segments) > 0 {
+	// 	return data, nil
+	// }
 
 	return FungetHistoryData(param, _sn)
 }
@@ -49,6 +49,7 @@ func FungetHistoryData(param models.ParamsTripHistorydata, _sn *mgo.Session) (re
 	//////////////////////////////////////////////////////
 
 	var _segment []datamodel.SegmentArr
+
 	for index, res1 := range res {
 
 		if res1.Actvt == "loc" {

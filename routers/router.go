@@ -48,4 +48,59 @@ func init() {
 			),
 		),
 	))
+
+	//tripapi/getReports
+	beego.AddNamespace(beego.NewNamespace("/"+namespaces[0],
+		beego.NSNamespace("/tripapi/report",
+			beego.NSInclude(
+				&controllers.ReportController{},
+			),
+		),
+	))
+
+	//tripapi/createGeoFence
+	beego.AddNamespace(beego.NewNamespace("/"+namespaces[0],
+		beego.NSNamespace("/tripapi/createGeoFence",
+			beego.NSInclude(
+				&controllers.CreateGeoFenceController{},
+			),
+		),
+	))
+
+	//tripapi/getGeoFence
+	beego.AddNamespace(beego.NewNamespace("/"+namespaces[0],
+		beego.NSNamespace("/tripapi/getGeoFence",
+			beego.NSInclude(
+				&controllers.GetGeoFenceController{},
+			),
+		),
+	))
+
+	//tripapi/deleteGeoFence
+	beego.AddNamespace(beego.NewNamespace("/"+namespaces[0],
+		beego.NSNamespace("/tripapi/deleteGeoFence",
+			beego.NSInclude(
+				&controllers.DeletGeoFenceController{},
+			),
+		),
+	))
+
+	//tripapi/deleteGeoFence
+	beego.AddNamespace(beego.NewNamespace("/"+namespaces[0],
+		beego.NSNamespace("/tripapi/vehicle",
+			beego.NSInclude(
+				&controllers.VehicleController{},
+			),
+		),
+	))
+
+	//OverSpeed
+	//tripapi/deleteGeoFence
+	beego.AddNamespace(beego.NewNamespace("/"+namespaces[0],
+		beego.NSNamespace("/tripapi/getOverSpeedCount",
+			beego.NSInclude(
+				&controllers.OverSpeedCountController{},
+			),
+		),
+	))
 }

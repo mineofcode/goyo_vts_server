@@ -35,5 +35,9 @@ type (
 		Acc      int           `bson:"acc" json:"acc"`
 		Gsmsig   int           `bson:"gsmsig" json:"gsmsig"`
 		Histdate time.Time     `bson:"histtm" json:"-"`
+		VhNm     string        `bson:"vhname" json:"vhname"`
+		Vhd      interface{}   `bson:"vhd" json:"vhd"`
+		Ipadr    string        `bson:"ip" json:"-"`
+		IsSpd    bool          `bson:"isp" json:"-"`
 	}
 )

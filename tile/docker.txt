@@ -1,0 +1,9 @@
+sudo docker ps
+sudo docker stop 
+sudo docker images
+sudo docker rmi 
+sudo docker build -t tile38 .
+sudo docker run --net="host" -p 9851:9851 -t --rm --name tile38 tile38
+
+--sudo docker run --net="host" -p 6980:6980 -p 6970:6970 -p 27017:27017 -it --rm --name gpst gpst
+

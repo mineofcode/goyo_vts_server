@@ -2,6 +2,7 @@ package models
 
 import (
 	"fmt"
+	"time"
 
 	"gopkg.in/mgo.v2/bson"
 	"goyo.in/gpstracker/datamodel"
@@ -79,8 +80,51 @@ func UpdateData(d interface{}, vhid string, f string) (err error) {
 type (
 	// ParamsTripdata represents the structure of our resource
 	ParamsTripHistorydata struct {
-		Vhid   string `json:"vhid"`
-		FromDt string `json:"frmdt"`
-		ToDt   string `json:"todt"`
+		Vhid   string   `json:"vhid"`
+		FromDt string   `json:"frmdt"`
+		ToDt   string   `json:"todt"`
+		OFlag  string   `json:"flag"`
+		Vhids  []string `json:"vhids"`
 	}
 )
+
+///Over Speed data
+
+func GetOverSpeedDataCount(trpparams ParamsTripHistorydata) (count int, err error) {
+	_sn := getDBSession().Copy()
+	defer _sn.Close()
+
+	fd, _ := time.Parse(time.RFC3339, fmt.Sprintf("%s", trpparams.FromDt))
+	tod, _ := time.Parse(time.RFC3339, fmt.Sprintf("%s", trpparams.ToDt))
+	// fmt.Println(tod)
+	//_vh := trpparams.Vhids //strings.Split(trpparams.Vhids, ",")
+
+	c := col(_sn, patterns.ColVhtrps)
+	count, err = c.Find(bson.M{"vhid": bson.M{"$in": trpparams.Vhids},
+		"sertm": bson.M{"$gte": fd, "$lte": tod},
+		"isp":   true}).Count()
+	//process on data
+
+	return count, err
+}
+
+//
+//Get OverSpeed Actual Data
+
+// func GetOverSpeedDataData(trpparams ParamsTripHistorydata) (count int, err error) {
+// 	_sn := getDBSession().Copy()
+// 	defer _sn.Close()
+
+// 	fd, _ := time.Parse(time.RFC3339, fmt.Sprintf("%s", trpparams.FromDt))
+// 	tod, _ := time.Parse(time.RFC3339, fmt.Sprintf("%s", trpparams.ToDt))
+
+// 	//_vh := trpparams.Vhids //strings.Split(trpparams.Vhids, ",")
+
+// 	c := col(_sn, patterns.ColVhtrps)
+// 	count, err = c.Find(bson.M{"vhid": bson.M{"$in": trpparams.Vhids},
+// 		"date": bson.M{"$gte": fd, "$lte": tod},
+// 		"isp":  true}).Count()
+// 	//process on data
+
+// 	return count, err
+// }

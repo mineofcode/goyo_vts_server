@@ -11,13 +11,17 @@ const (
 	dbip   = consts.MGODbip
 	dbport = consts.MGODbport
 	//Dbname Mongodb database name
-	Dbname = "goyosch"
+	//Dbname = "goyosch"
+	Dbname = "19j"
+
 	//ColVhcls 'vhcls' Collection
 	ColVhcls = "vhcls"
 	//ColVhtrps 'vhtrps' Collection
 	ColVhtrps = "vhtrps"
 	//ColHistory 'vhdyhst' Collection
 	ColHistory = "vhdyhst"
+	//ColGeofence 'geofnc' Collection
+	ColGeofence = "geofnc"
 
 	urldb        = dbip + ":" + dbport
 	authUserName = ""

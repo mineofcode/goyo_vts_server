@@ -5,6 +5,7 @@ import (
 	"strconv"
 
 	"goyo.in/gpstracker/const"
+	"goyo.in/gpstracker/tile"
 
 	"goyo.in/gpstracker/network"
 	// import "goyo.in/gpstracker/network"
@@ -33,8 +34,10 @@ func startAll() {
 		fmt.Println("Error TCP: ", err.Error())
 	}
 
-	job.StartJob()
+	go job.StartJob()
 
+	//go redigogeofence.Start()
+	go tile.GRpcRun()
 	//Start Rest API & Socket.io server
 	restservice.RestfulAPIServiceInit("HTTP")
 

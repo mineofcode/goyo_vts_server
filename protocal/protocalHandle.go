@@ -11,26 +11,67 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"goyo.in/gpstracker/crc16"
 	"goyo.in/gpstracker/models"
+	"goyo.in/gpstracker/redigogeofence"
+	//"github.com/jasonlvhit/gocron"
 )
 
-//Clients keep ip address in map key
 var Clients = make(map[string]clientsMod)
+
+//Clients keep ip address in map key
 var locker sync.Mutex
 
 type clientsMod struct {
-	con  net.Conn
-	imei string
-	lstm time.Time
+	con       net.Conn
+	imei      string
+	lstm      time.Time
+	allwspd   int
+	geofences []interface{}
+}
+
+// var Clients_Imei = make(map[string]clientsMod_Imei)
+// var locker_Imei sync.Mutex
+
+// //for imei based client
+// type clientsMod_Imei struct {
+// 	con       net.Conn
+// 	imei      string
+// 	lstm      time.Time
+// 	geofences []interface{}
+// }
+
+//Start the Function
+func Start() {
+	// s := gocron.NewScheduler()
+	// s.Every(10).Minutes().Do(checkClientLiveStatus)
+	// <-s.Start()
+}
+
+//Check client is dead or not
+func checkClientLiveStatus() {
+	//fmt.Println("clled")
+	locker.Lock()
+	defer locker.Unlock()
+	for k, v := range Clients {
+		tm := time.Now().Sub(v.lstm)
+		//fmt.Println(tm)
+		if tm > time.Minute*30 {
+
+			delete(Clients, k)
+			fmt.Println("Client Deleted ", k)
+		}
+	}
 }
 
 //Terminal connection persists
-func addClient(conn net.Conn, client string) {
+func addClient(conn net.Conn, client string, allwspd int) clientsMod {
 	locker.Lock()
 	defer locker.Unlock()
 	ip_address := conn.RemoteAddr().String()
-
-	Clients[ip_address] = clientsMod{con: conn, imei: client, lstm: time.Now()}
+	fmt.Println("Client Added  ", ip_address)
+	Clients[ip_address] = clientsMod{con: conn, imei: client, lstm: time.Now(), allwspd: allwspd}
+	return Clients[ip_address]
 }
+
 func RemoveClient(conn net.Conn) {
 	locker.Lock()
 	defer locker.Unlock()
@@ -43,6 +84,17 @@ func getClient(conn net.Conn) (client clientsMod) {
 	ip_address := conn.RemoteAddr().String()
 	_clientsMod := Clients[ip_address]
 	return _clientsMod
+}
+
+func UpdateAllowSpeed(speed int, ip string) {
+	locker.Lock()
+	defer locker.Unlock()
+	_clientsMod := Clients[ip]
+	if _clientsMod.imei != "" {
+		_clientsMod.allwspd = speed
+		Clients[ip] = _clientsMod
+	}
+
 }
 
 //ParseData Parse recceived data
@@ -78,8 +130,14 @@ func registerDevice(_data []byte, lendata int, connection net.Conn) {
 	// fmt.Println(_imei)
 	// fmt.Println(reply)
 	connection.Write(reply)
+	spd := models.GetVehiclesData(_imei)
 
-	addClient(connection, _imei)
+	addClient(connection, _imei, spd.AllowSpd)
+
+	//getFenceData(clnt)
+	/*add geofences for alarm*/
+
+	//clnt.geofences =
 	//need to call mongo db
 	// fmt.Println(len(Clients))
 	// fmt.Println(_imei)
@@ -96,6 +154,7 @@ func registerDevice(_data []byte, lendata int, connection net.Conn) {
 		"flag":  "inprog",
 		"appvr": "1.0",
 		"vhid":  _imei,
+		"ip":    connection.RemoteAddr().String(),
 		"speed": 0}
 	models.UpdateData(_d, _imei, "reg")
 
@@ -147,26 +206,6 @@ func heartBeat(_data []byte, lendata int, connection net.Conn) {
 	if data.Chrg == 1 {
 		data.Btrst = "CHRG"
 	}
-
-	// data := bson.M{
-	// 	"acttm":  time.Now(),
-	// 	"actvt":  "hrtbt",
-	// 	"sertm":  time.Now(),
-	// 	"imei":   _clnt.imei,
-	// 	"flag":   "inprog",
-	// 	"appvr":  "1.0",
-	// 	"vhid":   _clnt.imei,
-	// 	"btr":    batryper(int(_data[5])),
-	// 	"btrst":  btrt,
-	// 	"oe":     _prd[0:1],                           //1: oil and electricity disconnected, 0: gas oil and electricity
-	// 	"gp":     _prd[1:2],                           //1: GPS tracking is on,0: GPS tracking is off
-	// 	"alm":    (_prd[2:3] + _prd[3:4] + _prd[4:5]), //100: SOS,011: Low Battery Alarm,010: Power Cut Alarm,001: Shock Alarm,000: Normal
-	// 	"chrg":   _prd[5:6],                           //1: Charge On,0: Charge Off
-	// 	"acc":    _prd[6:7],                           //1: ACC high,0: ACC Low
-	// 	"df":     _prd[7:8],                           //1: Defense Activated,0: Defense Deactivated,
-	// 	"gsmsig": networkper(int(_data[6])),           //0x00: no signal,0x01: extremely weak signal,0x02: very weak signal,0x03: good signal,0x04: strong signal
-	// 	"lng":    1}
-
 	//need to call mongo db
 	models.UpdateData(data, _clnt.imei, "hrt")
 	// fmt.Println(fmt.Sprintf("%x", reply))
@@ -179,16 +218,6 @@ func heartBeat(_data []byte, lendata int, connection net.Conn) {
 
 //getting heart beat
 func locationDt(_data []byte, lendata int, connection net.Conn) {
-
-	//reply := []byte{0x78, 0x78, 0x05, 0x13} //assign reply variable
-	//serial := _data[7:9] //get crc from data
-	//78 78 1F 12 0B 08 1D 11 2E 10 CC 02 7A C7 EB 0C 46 58 49 00 14 8F 01 CC 00 28 7D 00 1F B8 00 03 80 81 0D 0A
-	//_crxCRC := append([]byte{0x05, 0x13}, serial...) // create crc string
-	//_crxCRCF := crc16.GetCrc16(_crxCRC)              // get computed crc in variable
-	//_crxCRCF = append(_crxCRCF, 0x0D, 0x0A)          // append final crc and reply data
-	//reply = append(reply, _crxCRCF...)               //append all data to reply variable
-	//Client get by ipaddress
-	//datetime
 
 	_clnt := getClient(connection)
 	if _clnt.imei == "" {
@@ -209,24 +238,43 @@ func locationDt(_data []byte, lendata int, connection net.Conn) {
 
 	_courus := fmt.Sprintf("%016b", binary.BigEndian.Uint16(_data[20:22]))
 	_bearing, _ := strconv.ParseInt(_courus[6:], 2, 64) // get bearing
+	point := []float64{toFixed(_lon, 6), toFixed(_lat, 6)}
+
+	var isp bool = false
+	if _clnt.allwspd > 0 {
+		if int(_data[19]) > _clnt.allwspd {
+			// speed voilence
+			//fmt.Println(int(_data[19]))
+
+			isp = true
+		}
+	}
 
 	data := bson.M{
-		"gpstm":   _dt,
-		"actvt":   "loc",
-		"sertm":   time.Now(),
-		"imei":    _clnt.imei,
-		"flag":    "inprog",
-		"appvr":   "1.0",
-		"sat":     _stlt,
-		"loc":     []float64{toFixed(_lon, 6), toFixed(_lat, 6)},
-		"postyp":  _courus[2:3],
-		"bearing": _bearing,
-		"speed":   _data[19],
-		"vhid":    _clnt.imei}
-
+		"gpstm":    _dt,
+		"actvt":    "loc",
+		"sertm":    time.Now(),
+		"imei":     _clnt.imei,
+		"alwspeed": _clnt.allwspd,
+		"isp":      isp,
+		"flag":     "inprog",
+		"appvr":    "1.0",
+		"sat":      _stlt,
+		"loc":      point,
+		"postyp":   _courus[2:3],
+		"bearing":  _bearing,
+		"speed":    _data[19],
+		"vhid":     _clnt.imei}
 	//need to call mongo db
 	models.UpdateData(data, _clnt.imei, "loc")
+	checkGeofence(point, _data[19], _clnt.imei)
+
 	//fmt.Println(fmt.Sprintf("%x", reply))
 	//send reply to terminal
 	//connection.Write(reply)
+}
+
+// send points to check for geofence
+func checkGeofence(pont []float64, speed byte, imei string) {
+	go redigogeofence.SetValue(pont, speed, imei)
 }

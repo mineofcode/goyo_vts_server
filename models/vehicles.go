@@ -13,6 +13,7 @@ import (
 type Vhdata struct {
 	VhId   string    `bson:"vhid"`
 	Histtm time.Time `bson:"histtm"`
+	Ip     string    `bson:"ip"`
 }
 
 func GetVehicles(search interface{}, _sn *mgo.Session) []Vhdata {
@@ -75,4 +76,51 @@ func GetStoredHistory(vhid string, histm string, _sn *mgo.Session) (result datam
 
 	err = c.Find(bson.M{"vhid": vhid, "date": frmt}).One(&dR)
 	return dR, err
+}
+
+//update Insert vehicledata
+func UpdateVehicleData(d interface{}, vhid interface{}) (result string, ipaddr string) {
+	_sn := getDBSession().Copy()
+	defer _sn.Close()
+	var err error
+	var ip string
+	//fmt.Println(vhid, d)
+	c := col(_sn, patterns.ColVhcls)
+	if dberr := c.Update(bson.M{"vhid": vhid}, bson.M{"$set": d}); dberr != nil {
+		//fmt.Println(dberr)
+		result = dberr.Error()
+		if dberr.Error() == "not found" {
+			_, err = c.UpsertId(bson.M{"vhid": vhid}, bson.M{"$set": d})
+			if err != nil {
+				result = err.Error()
+			}
+			result = "Created Successfully"
+		}
+	} else {
+
+		var vh Vhdata
+
+		c.Find(bson.M{"vhid": vhid}).One(&vh)
+
+		ip = vh.Ip
+
+		result = "Updated Successfully"
+	}
+	return result, ip
+}
+
+type VhLoginData struct {
+	AllowSpd int `bson:"alwspeed"`
+}
+
+func GetVehiclesData(vhid string) VhLoginData {
+	_sn := getDBSession().Copy()
+	defer _sn.Close()
+
+	c := col(_sn, patterns.ColVhcls)
+	var dResult1 VhLoginData
+	// fmt.Println("this ", frmt)
+
+	_ = c.Find(bson.M{"vhid": vhid}).One(&dResult1)
+	return dResult1
 }

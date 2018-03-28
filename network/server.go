@@ -70,7 +70,7 @@ func (this *TCPServer) Open() error {
 		}
 	}()
 	//go this.PingAll()
-
+	go protocalHandler.Start()
 	return nil
 }
 
