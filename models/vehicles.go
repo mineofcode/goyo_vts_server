@@ -110,7 +110,8 @@ func UpdateVehicleData(d interface{}, vhid interface{}) (result string, ipaddr s
 }
 
 type VhLoginData struct {
-	AllowSpd int `bson:"alwspeed"`
+	AllowSpd int    `bson:"alwspeed"`
+	VhNm     string `bson:"vhname"`
 }
 
 func GetVehiclesData(vhid string) VhLoginData {

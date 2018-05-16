@@ -167,6 +167,19 @@ func GetGeoFence(params interface{}) (result []datamodel.GeoFenceModel, err erro
 	return datamodel, nil
 }
 
+func GetGeoFenceSingle(params interface{}) (result datamodel.GeoFenceModel, err error) {
+
+	_sn := getDBSession().Copy()
+	defer _sn.Close()
+
+	//fmt.Println(vhid, d)
+
+	c := col(_sn, patterns.ColGeofence)
+	var datamodel datamodel.GeoFenceModel
+	c.Find(params).One(&datamodel)
+	return datamodel, nil
+}
+
 //delete fence
 
 func DeleteGeoFence(params datamodel.GetGeoFenceParams) (result interface{}, err error) {

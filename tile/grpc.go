@@ -2,7 +2,6 @@ package tile
 
 import (
 	"fmt"
-	lg "log"
 	"net"
 	"sync/atomic"
 
@@ -27,8 +26,9 @@ func (s *server) Send(ctx context.Context, in *pb.MessageRequest) (*pb.MessageRe
 
 	data := datamodel.GeofenceDetect{}
 	json.Unmarshal([]byte(in.Value), &data)
-	lg.Printf("Receive message %s", data.Detect)
-	go redigogeofence.CallService(data)
+	//lg.Printf("Receive message %s", data.Detect)
+	//go
+	redigogeofence.CallService(data)
 	//log.WithFields(log.F("func", "server.Send"), log.F("sCnt", s.sCnt)).Info(in.String())
 	return &pb.MessageReply{Ok: true}, nil
 }

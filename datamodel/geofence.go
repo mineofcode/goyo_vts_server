@@ -20,6 +20,12 @@ type GeoFenceModel struct {
 
 }
 
+type FenceTime struct {
+	Batchid int    `json:"batchid"` // TimeType  daily|datetime|date|time
+	Day     string `json:"day"`     // Time to Fence
+	Time    string `json:"time"`
+}
+
 type GetGeoFenceParams struct {
 	Imei      string `bson:"imei" json:"imei"`   // imei number of device
 	FenceName string `bson:"fncnm" json:"fncnm"` // fence unique name

@@ -1,6 +1,6 @@
 sudo docker ps
 sudo docker stop 
-sudo docker images
+    sudo docker images
 sudo docker rmi 
 sudo docker build -t gpst .
 sudo docker run --net="host" -p 6969:6969 -p 6979:6979 -p 27017:27017 -t --rm --name gpst gpst
@@ -9,6 +9,6 @@ sudo docker run --net="host" -p 6969:6969 -p 6979:6979 -p 27017:27017 -t --rm --
 
 -- sudo docker run --net="host" -p 6980:6980 -p 6970:6970 -p 27017:27017 -it --rm --name gpst gpst
 
--- sudo docker tag 32b18b8777e9 oldimg
+-- sudo docker tag f9006137d024 oldimg
 -- sudo docker stats -a
 

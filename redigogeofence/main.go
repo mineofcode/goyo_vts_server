@@ -123,14 +123,14 @@ func SetValue(point []float64, speed byte, imei string) {
 		speed,
 		point[1],
 		point[0])
-	fmt.Println(hookCmd)
-	reply, err := tile38con.Do(hookCmd)
+	//fmt.Println(hookCmd)
+	_, err1 := tile38con.Do(hookCmd)
 
-	if err != nil {
-		fmt.Println("Could not SET:" + err.Error())
+	if err1 != nil {
+		fmt.Println("Could not SET:" + err1.Error())
 
 	} else {
-		fmt.Println(reply)
+		//fmt.Println(reply)
 
 	}
 

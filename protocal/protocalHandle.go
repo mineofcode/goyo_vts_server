@@ -10,6 +10,7 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 	"goyo.in/gpstracker/crc16"
+	"goyo.in/gpstracker/fcm"
 	"goyo.in/gpstracker/models"
 	"goyo.in/gpstracker/redigogeofence"
 	//"github.com/jasonlvhit/gocron"
@@ -239,13 +240,17 @@ func locationDt(_data []byte, lendata int, connection net.Conn) {
 	_courus := fmt.Sprintf("%016b", binary.BigEndian.Uint16(_data[20:22]))
 	_bearing, _ := strconv.ParseInt(_courus[6:], 2, 64) // get bearing
 	point := []float64{toFixed(_lon, 6), toFixed(_lat, 6)}
-
+	fmt.Println(_clnt.allwspd)
 	var isp bool = false
 	if _clnt.allwspd > 0 {
-		if int(_data[19]) > _clnt.allwspd {
+
+		crspeed := int(_data[19])
+
+		fmt.Println(crspeed)
+		if crspeed > _clnt.allwspd {
 			// speed voilence
 			//fmt.Println(int(_data[19]))
-
+			go fcm.SendSpeedAlertTotopic(_clnt.imei, crspeed)
 			isp = true
 		}
 	}

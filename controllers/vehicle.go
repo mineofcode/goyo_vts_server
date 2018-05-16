@@ -2,8 +2,6 @@ package controllers
 
 import (
 	"encoding/json"
-	"fmt"
-	"reflect"
 
 	"goyo.in/gpstracker/protocal"
 
@@ -44,11 +42,11 @@ func (o *VehicleController) Post() {
 	// response.Count = 123
 	_ = json.Unmarshal(o.Ctx.Input.RequestBody, &response)
 
-	fmt.Println(response)
+	//fmt.Println(response)
 
-	param := reflect.ValueOf(ob)
+	//param := reflect.ValueOf(ob)
 
-	fmt.Println(param.MapIndex(reflect.ValueOf("alwspeed")).Kind())
+	//fmt.Println(param.MapIndex(reflect.ValueOf("alwspeed")).Kind())
 
 	//alwspeed := param.MapIndex(reflect.ValueOf("alwspeed")).Interface()
 

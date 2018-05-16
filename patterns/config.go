@@ -11,8 +11,8 @@ const (
 	dbip   = consts.MGODbip
 	dbport = consts.MGODbport
 	//Dbname Mongodb database name
-	//Dbname = "goyosch"
-	Dbname = "19j"
+	Dbname = "goyosch"
+	//Dbname = "19j"
 
 	//ColVhcls 'vhcls' Collection
 	ColVhcls = "vhcls"

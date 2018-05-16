@@ -21,6 +21,12 @@ type (
 		Tile38  Tile38Opts
 		Db      MongoDB
 		WebScok WebSockets
+		Config  Configs
+		Fcm     FCMs
+	}
+
+	Configs struct {
+		TimeZone string `help:"tile38 server address(addr:port)" from:"env,flag"`
 	}
 
 	Tile38Opts struct {
@@ -37,6 +43,10 @@ type (
 		MGODbip   string `""`
 		MGODbport string `""`
 	}
+
+	FCMs struct {
+		ServerKey string `"help:Specify server key"`
+	}
 )
 
 var DefaultOpts = &Options{
@@ -52,5 +62,11 @@ var DefaultOpts = &Options{
 	Db: MongoDB{
 		MGODbip:   "127.0.0.1",
 		MGODbport: "27017",
+	},
+	Config: Configs{
+		TimeZone: "Asia/Kolkata",
+	},
+	Fcm: FCMs{
+		ServerKey: "AIzaSyC-NRRU-YzHfMHejjgqTdNqfhOlgqNgduo",
 	},
 }
