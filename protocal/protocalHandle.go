@@ -241,7 +241,23 @@ func locationDt(_data []byte, lendata int, connection net.Conn) {
 	_bearing, _ := strconv.ParseInt(_courus[6:], 2, 64) // get bearing
 	point := []float64{toFixed(_lon, 6), toFixed(_lat, 6)}
 	fmt.Println(_clnt.allwspd)
-	var isp bool = false
+
+	data := bson.M{
+		"gpstm":    _dt,
+		"actvt":    "loc",
+		"sertm":    time.Now(),
+		"imei":     _clnt.imei,
+		"alwspeed": _clnt.allwspd,
+		"isp":      false,
+		"flag":     "inprog",
+		"appvr":    "1.0",
+		"sat":      _stlt,
+		"loc":      point,
+		"postyp":   _courus[2:3],
+		"bearing":  _bearing,
+		"speed":    _data[19],
+		"vhid":     _clnt.imei}
+
 	if _clnt.allwspd > 0 {
 
 		crspeed := int(_data[19])
@@ -251,25 +267,12 @@ func locationDt(_data []byte, lendata int, connection net.Conn) {
 			// speed voilence
 			//fmt.Println(int(_data[19]))
 			go fcm.SendSpeedAlertTotopic(_clnt.imei, crspeed)
-			isp = true
+			data["lstspd"] = crspeed
+			data["lstspdtm"] = time.Now()
+			data["isp"] = true
 		}
 	}
 
-	data := bson.M{
-		"gpstm":    _dt,
-		"actvt":    "loc",
-		"sertm":    time.Now(),
-		"imei":     _clnt.imei,
-		"alwspeed": _clnt.allwspd,
-		"isp":      isp,
-		"flag":     "inprog",
-		"appvr":    "1.0",
-		"sat":      _stlt,
-		"loc":      point,
-		"postyp":   _courus[2:3],
-		"bearing":  _bearing,
-		"speed":    _data[19],
-		"vhid":     _clnt.imei}
 	//need to call mongo db
 	models.UpdateData(data, _clnt.imei, "loc")
 	checkGeofence(point, _data[19], _clnt.imei)

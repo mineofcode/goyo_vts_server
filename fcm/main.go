@@ -21,8 +21,10 @@ func SendSpeedAlertTotopic(imei string, speed int) {
 	var NP fcm.NotificationPayload
 	NP.Title = fmt.Sprintf("Speed Alert : %s", vhdet.VhNm)
 	NP.Body = fmt.Sprintf("Allowd speed %d Current speed %d", vhdet.AllowSpd, speed)
+	NP.Sound = "default"
 
 	data := map[string]string{
+		"vhid":  imei,
 		"speed": strconv.Itoa(speed),
 		"topic": "speed",
 		"title": NP.Title,

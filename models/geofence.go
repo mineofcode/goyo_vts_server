@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/go-playground/log"
-	"github.com/tidwall/tile38/client"
 	"gopkg.in/mgo.v2/bson"
+	"goyo.in/gpstracker/client"
 	opts "goyo.in/gpstracker/const"
 	"goyo.in/gpstracker/datamodel"
 	"goyo.in/gpstracker/db"

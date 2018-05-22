@@ -39,5 +39,7 @@ type (
 		Vhd      interface{}   `bson:"vhd" json:"vhd"`
 		Ipadr    string        `bson:"ip" json:"-"`
 		IsSpd    bool          `bson:"isp" json:"-"`
+		LstSpd   int           `bson:"lstspd" json:"lstspd"`
+		LstSpdtm time.Time     `bson:"lstspdtm" json:"lstspdtm"`
 	}
 )

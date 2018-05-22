@@ -8,7 +8,7 @@ import (
 
 	"github.com/garyburd/redigo/redis"
 	"github.com/go-playground/log"
-	"github.com/tidwall/tile38/client"
+	"goyo.in/gpstracker/client"
 	opts "goyo.in/gpstracker/const"
 )
 

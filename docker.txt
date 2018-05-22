@@ -1,6 +1,6 @@
 sudo docker ps
 sudo docker stop 
-    sudo docker images
+sudo docker images
 sudo docker rmi 
 sudo docker build -t gpst .
 sudo docker run --net="host" -p 6969:6969 -p 6979:6979 -p 27017:27017 -t --rm --name gpst gpst
