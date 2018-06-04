@@ -12,3 +12,4 @@ sudo docker run --net="host" -p 6969:6969 -p 6979:6979 -p 27017:27017 -t --rm --
 -- sudo docker tag f9006137d024 oldimg
 -- sudo docker stats -a
 
+--/goyo/GO/goyo.in/gpstracker

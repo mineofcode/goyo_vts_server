@@ -109,9 +109,26 @@ func UpdateVehicleData(d interface{}, vhid interface{}) (result string, ipaddr s
 	return result, ip
 }
 
+//update Insert vehicledata
+func GetVehicleIP(vhid interface{}) (ipaddr string) {
+	_sn := getDBSession().Copy()
+	defer _sn.Close()
+	var ip string
+	//fmt.Println(vhid, d)
+	c := col(_sn, patterns.ColVhcls)
+	var vh Vhdata
+
+	c.Find(bson.M{"vhid": vhid}).One(&vh)
+
+	ip = vh.Ip
+
+	return ip
+}
+
 type VhLoginData struct {
-	AllowSpd int    `bson:"alwspeed"`
-	VhNm     string `bson:"vhname"`
+	AllowSpd int       `bson:"alwspeed"`
+	VhNm     string    `bson:"vhname"`
+	LstSpdtm time.Time `bson:"lstspdtm"`
 }
 
 func GetVehiclesData(vhid string) VhLoginData {

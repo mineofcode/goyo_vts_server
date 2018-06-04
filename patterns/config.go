@@ -22,6 +22,10 @@ const (
 	ColHistory = "vhdyhst"
 	//ColGeofence 'geofnc' Collection
 	ColGeofence = "geofnc"
+	//ColGeofence 'evt' Collection
+	ColVHevts = "vhevts"
+	//ColGeofence 'evt' Collection
+	ColCommandsLog = "cmdlogs"
 
 	urldb        = dbip + ":" + dbport
 	authUserName = ""
@@ -30,6 +34,6 @@ const (
 
 var mongoDBDialInfo = &mgo.DialInfo{
 	Addrs:    []string{urldb},
-	Timeout:  5 * time.Second,
+	Timeout:  2 * time.Minute,
 	Database: Dbname,
 }

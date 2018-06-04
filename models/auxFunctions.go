@@ -19,7 +19,9 @@ var errDial error
 
 // acceso a la DB por cada consulta
 func accessDB(collection string) *mgo.Collection {
+
 	session, errDial = patterns.GetSessErrMongoDBSession("Dial")
+
 	verifyErr(errDial)
 	session.SetMode(mgo.Monotonic, true)
 	col := session.DB(patterns.Dbname).C(collection)
@@ -32,6 +34,7 @@ func getDBSession() *mgo.Session {
 		fmt.Println("enter main - connecting to mongo")
 
 		session, errDial = patterns.GetSessErrMongoDBSession("DialWithInfo")
+
 		fmt.Println("enter main - dial")
 
 		verifyErr(errDial)

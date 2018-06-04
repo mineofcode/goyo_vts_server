@@ -28,7 +28,7 @@ func (o *ReportController) Post() {
 	json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
 	result, err := models.GetReport(ob)
 	if err != nil {
-		o.Data["json"] = err.Error()
+		o.Data["json"] = utils.CreateWrap("200", err.Error())
 	} else {
 		o.Data["json"] = utils.CreateWrap("200", result)
 	}

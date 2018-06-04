@@ -7,7 +7,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"goyo.in/gpstracker/datamodel"
 	patterns "goyo.in/gpstracker/patterns"
-	"goyo.in/gpstracker/socketios"
+	"goyo.in/gpstracker/shared"
 )
 
 // type GeoJson struct {
@@ -42,7 +42,7 @@ func GetLastStatus(trpparams ParamsTripdata) (ret []datamodel.Vehicles, err erro
 }
 
 //UpdateData
-func UpdateData(d interface{}, vhid string, f string) (err error) {
+func UpdateData(d interface{}, vhid string, f string, otherdata interface{}) (err error) {
 	_sn := getDBSession().Copy()
 	defer _sn.Close()
 
@@ -65,16 +65,30 @@ func UpdateData(d interface{}, vhid string, f string) (err error) {
 		// insert in history table
 		ch := col(_sn, patterns.ColVhtrps)
 		err = ch.Insert(d)
+		go SendLive(vhid, bson.M{"evt": "data", "data": d})
+		// send to socket server
 
+	} else if f == "hrt" {
+		go SendLive(vhid, bson.M{"evt": "data", "data": d})
+
+	} else if f == "d1" {
+		// insert in history table
+		ch := col(_sn, patterns.ColVHevts)
+		err = ch.Insert(otherdata)
+		// send to socket server
+		go SendLive(vhid, bson.M{"evt": "data", "data": otherdata})
+
+	} else if f == "dd" {
+		go SendLive(vhid, bson.M{"evt": "data", "data": otherdata})
 	}
 
-	// send to socket server
-	go func() {
-		socket := socketios.GetSocketIO()
-		socket.BroadcastTo(vhid, "msgd", bson.M{"evt": "data", "data": d})
-	}()
-
 	return err
+}
+
+//SendLive send live location to devices
+func SendLive(vhid string, data interface{}) {
+	socket := shared.Socket
+	socket.BroadcastTo(vhid, "msgd", data)
 }
 
 type (

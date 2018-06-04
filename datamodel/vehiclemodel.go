@@ -41,5 +41,6 @@ type (
 		IsSpd    bool          `bson:"isp" json:"-"`
 		LstSpd   int           `bson:"lstspd" json:"lstspd"`
 		LstSpdtm time.Time     `bson:"lstspdtm" json:"lstspdtm"`
+		D1       int           `bson:"d1" json:"d1"`
 	}
 )

@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 
 	"goyo.in/gpstracker/const"
@@ -27,18 +26,21 @@ func main() {
 
 func startAll() {
 	//Start TCP server
-	en := network.TCPServer{Host: consts.TCPHost, Port: strconv.Itoa(consts.TCPPort), Timeout: 3000}
-	err := en.Open()
 
-	if err != nil {
-		fmt.Println("Error TCP: ", err.Error())
-	}
+	// if err != nil {
+	// 	fmt.Println("Error TCP: ", err.Error())
+	// }
 
 	go job.StartJob()
 
 	//go redigogeofence.Start()
 	go tile.GRpcRun()
 	//Start Rest API & Socket.io server
-	restservice.RestfulAPIServiceInit("HTTP")
+	go func() {
+		restservice.RestfulAPIServiceInit("HTTP")
+	}()
+
+	en := network.TCPServer_new{Host: consts.TCPHost, Port: strconv.Itoa(consts.TCPPort), Timeout: 3000}
+	en.StartServer()
 
 }

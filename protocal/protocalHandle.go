@@ -1,11 +1,14 @@
 package protocalHandler
 
 import (
+	"bytes"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
+	"log"
 	"net"
 	"strconv"
-	"sync"
+	"strings"
 	"time"
 
 	"gopkg.in/mgo.v2/bson"
@@ -13,21 +16,11 @@ import (
 	"goyo.in/gpstracker/fcm"
 	"goyo.in/gpstracker/models"
 	"goyo.in/gpstracker/redigogeofence"
+	"goyo.in/gpstracker/shared"
 	//"github.com/jasonlvhit/gocron"
 )
 
-var Clients = make(map[string]clientsMod)
-
 //Clients keep ip address in map key
-var locker sync.Mutex
-
-type clientsMod struct {
-	con       net.Conn
-	imei      string
-	lstm      time.Time
-	allwspd   int
-	geofences []interface{}
-}
 
 // var Clients_Imei = make(map[string]clientsMod_Imei)
 // var locker_Imei sync.Mutex
@@ -41,59 +34,37 @@ type clientsMod struct {
 // }
 
 //Start the Function
-func Start() {
-	// s := gocron.NewScheduler()
-	// s.Every(10).Minutes().Do(checkClientLiveStatus)
-	// <-s.Start()
-}
-
-//Check client is dead or not
-func checkClientLiveStatus() {
-	//fmt.Println("clled")
-	locker.Lock()
-	defer locker.Unlock()
-	for k, v := range Clients {
-		tm := time.Now().Sub(v.lstm)
-		//fmt.Println(tm)
-		if tm > time.Minute*30 {
-
-			delete(Clients, k)
-			fmt.Println("Client Deleted ", k)
-		}
-	}
-}
 
 //Terminal connection persists
-func addClient(conn net.Conn, client string, allwspd int) clientsMod {
-	locker.Lock()
-	defer locker.Unlock()
-	ip_address := conn.RemoteAddr().String()
-	fmt.Println("Client Added  ", ip_address)
-	Clients[ip_address] = clientsMod{con: conn, imei: client, lstm: time.Now(), allwspd: allwspd}
-	return Clients[ip_address]
+func addClient(conn net.Conn, client string, allwspd int) shared.ClientsMod {
+	shared.Locker.Lock()
+	defer shared.Locker.Unlock()
+	ipaddress := conn.RemoteAddr().String()
+	fmt.Println("Client Added  ", ipaddress)
+	shared.Clients[ipaddress] = shared.ClientsMod{Con: conn, Imei: client, Lstm: time.Now(), Allwspd: allwspd}
+	return shared.Clients[ipaddress]
 }
 
 func RemoveClient(conn net.Conn) {
-	locker.Lock()
-	defer locker.Unlock()
-
-	ip_address := conn.RemoteAddr().String()
-	delete(Clients, ip_address)
+	shared.Locker.Lock()
+	defer shared.Locker.Unlock()
+	ipaddress := conn.RemoteAddr().String()
+	delete(shared.Clients, ipaddress)
 }
 
-func getClient(conn net.Conn) (client clientsMod) {
-	ip_address := conn.RemoteAddr().String()
-	_clientsMod := Clients[ip_address]
+func getClient(conn net.Conn) (client shared.ClientsMod) {
+	ipaddress := conn.RemoteAddr().String()
+	_clientsMod := shared.Clients[ipaddress]
 	return _clientsMod
 }
 
 func UpdateAllowSpeed(speed int, ip string) {
-	locker.Lock()
-	defer locker.Unlock()
-	_clientsMod := Clients[ip]
-	if _clientsMod.imei != "" {
-		_clientsMod.allwspd = speed
-		Clients[ip] = _clientsMod
+	shared.Locker.Lock()
+	defer shared.Locker.Unlock()
+	_clientsMod := shared.Clients[ip]
+	if _clientsMod.Imei != "" {
+		_clientsMod.Allwspd = speed
+		shared.Clients[ip] = _clientsMod
 	}
 
 }
@@ -101,14 +72,43 @@ func UpdateAllowSpeed(speed int, ip string) {
 //ParseData Parse recceived data
 func ParseData(_data []byte, lendata int, connection net.Conn) {
 
-	if !((_data[0] == 0x78) && (_data[1] == 0x78)) {
-		fmt.Println("not equl")
-	} else if _data[3] == 0x01 {
-		registerDevice(_data, lendata, connection)
-	} else if _data[3] == 0x13 {
-		heartBeat(_data, lendata, connection)
-	} else if (_data[3] == 0x22) || (_data[3] == 0x12) {
-		locationDt(_data, lendata, connection)
+	//fmt.Printf("%02x\n", bytes.Trim(_data, "\x00"))
+
+	//Concox Device
+	//Check for valid command
+	if !(_data[0] == 0x78 || _data[0] == 0x79) {
+		fmt.Println("invalid command")
+	} else if _data[0] == 0x78 { //check for 78 commands
+		if _data[3] == 0x01 {
+			registerDevice(_data, lendata, connection) // Registration Response
+		} else if _data[3] == 0x13 {
+			heartBeat(_data, lendata, connection) // HeartBeat Response
+		} else if (_data[3] == 0x22) || (_data[3] == 0x12) {
+			locationDt(_data, lendata, connection) //location data
+		} else if _data[3] == 0x15 {
+			commandReply(_data, lendata, connection) //location data
+		}
+	} else if _data[0] == 0x79 { //check for 79 Alarm Commnd
+
+		switch _data[5] {
+		case 0x00: //External power voltage
+			{
+				//needs to be added
+				break
+			}
+		case 0x04: //Terminal status sync
+			{
+				almDecode04(_data, lendata, connection)
+				//needs to be added
+				break
+			}
+		case 0x5: //door status
+			{
+				almDecode05(_data, lendata, connection)
+				break
+			}
+
+		}
 	}
 
 	//data1 := string(_data[:lendata])
@@ -117,15 +117,18 @@ func ParseData(_data []byte, lendata int, connection net.Conn) {
 	//connection.Write([]byte(data1 + "\n"))
 }
 
+var cmd = ""
+
 //register device in terminal
 func registerDevice(_data []byte, lendata int, connection net.Conn) {
 	reply := []byte{0x78, 0x78, 0x05, 0x01}          //assign reply variable
 	serial := _data[12:14]                           //get crc from data
 	_crxCRC := append([]byte{0x05, 0x01}, serial...) // create crc string
 	_crxCRCF := crc16.GetCrc16(_crxCRC)              // get computed crc in variable
-	_crxCRCF = append(serial, _crxCRCF...)           // append final crc and reply data
-	reply = append(reply, _crxCRCF...)               // append final crc and reply data
-	reply = append(reply, 0x0D, 0x0A)                //EOF
+	fmt.Printf("%02X\n", _crxCRCF)
+	_crxCRCF = append(serial, _crxCRCF...) // append final crc and reply data
+	reply = append(reply, _crxCRCF...)     // append final crc and reply data
+	reply = append(reply, 0x0D, 0x0A)      //EOF
 	//get imei number
 	_imei := fmt.Sprintf("%x", _data[4:12])[1:16] //getting imei number
 	// fmt.Println(_imei)
@@ -134,17 +137,6 @@ func registerDevice(_data []byte, lendata int, connection net.Conn) {
 	spd := models.GetVehiclesData(_imei)
 
 	addClient(connection, _imei, spd.AllowSpd)
-
-	//getFenceData(clnt)
-	/*add geofences for alarm*/
-
-	//clnt.geofences =
-	//need to call mongo db
-	// fmt.Println(len(Clients))
-	// fmt.Println(_imei)
-	//send reply to terminal
-	// socket := socketios.GetSocketIO()
-	// socket.BroadcastTo(_imei, "msgd", fmt.Sprintf("%x", reply))
 
 	_d := bson.M{
 		"acttm": time.Now(),
@@ -157,17 +149,16 @@ func registerDevice(_data []byte, lendata int, connection net.Conn) {
 		"vhid":  _imei,
 		"ip":    connection.RemoteAddr().String(),
 		"speed": 0}
-	models.UpdateData(_d, _imei, "reg")
-
+	models.UpdateData(_d, _imei, "reg", nil)
 }
 
 //getting heart beat
 func heartBeat(_data []byte, lendata int, connection net.Conn) {
 	_clnt := getClient(connection)
-	if _clnt.imei == "" {
+	if _clnt.Imei == "" {
 		return
 	}
-	_clnt.lstm = time.Now()
+	_clnt.Lstm = time.Now()
 
 	reply := []byte{0x78, 0x78, 0x05, 0x13} //assign reply variable
 	serial := _data[7:9]                    //get crc from data
@@ -189,10 +180,10 @@ func heartBeat(_data []byte, lendata int, connection net.Conn) {
 		Actvt:  "hrtbt",
 		Sertm:  time.Now(),
 		Speed:  0,
-		Imei:   _clnt.imei,
+		Imei:   _clnt.Imei,
 		Flag:   "inprog",
 		Appvr:  "1.0",
-		Vhid:   _clnt.imei,
+		Vhid:   _clnt.Imei,
 		Btr:    batryper(int(_data[5])),
 		Btrst:  btrt,
 		Alm:    (_prd[2:3] + _prd[3:4] + _prd[4:5]), //100: SOS,011: Low Battery Alarm,010: Power Cut Alarm,001: Shock Alarm,000: Normal
@@ -208,23 +199,24 @@ func heartBeat(_data []byte, lendata int, connection net.Conn) {
 		data.Btrst = "CHRG"
 	}
 	//need to call mongo db
-	models.UpdateData(data, _clnt.imei, "hrt")
+	models.UpdateData(data, _clnt.Imei, "hrt", nil)
 	// fmt.Println(fmt.Sprintf("%x", reply))
 	//a := fmt.Sprintf("%v", data)
 	//send reply to terminal
 	// socket := socketios.GetSocketIO()
 	// socket.BroadcastTo(_clnt.imei, "msgd", a)
 	connection.Write(reply)
+
 }
 
 //getting heart beat
 func locationDt(_data []byte, lendata int, connection net.Conn) {
 
 	_clnt := getClient(connection)
-	if _clnt.imei == "" {
+	if _clnt.Imei == "" {
 		return
 	}
-	_clnt.lstm = time.Now()
+	_clnt.Lstm = time.Now()
 
 	_dt := "20" + fmt.Sprintf("%d-%d-%d %d:%d:%d", _data[4], _data[5], _data[6], _data[7], _data[8], _data[9]) //conver to Date
 	//fmt.Println(_dt)
@@ -240,14 +232,14 @@ func locationDt(_data []byte, lendata int, connection net.Conn) {
 	_courus := fmt.Sprintf("%016b", binary.BigEndian.Uint16(_data[20:22]))
 	_bearing, _ := strconv.ParseInt(_courus[6:], 2, 64) // get bearing
 	point := []float64{toFixed(_lon, 6), toFixed(_lat, 6)}
-	fmt.Println(_clnt.allwspd)
+	//fmt.Println(_clnt.allwspd)
 
 	data := bson.M{
 		"gpstm":    _dt,
 		"actvt":    "loc",
 		"sertm":    time.Now(),
-		"imei":     _clnt.imei,
-		"alwspeed": _clnt.allwspd,
+		"imei":     _clnt.Imei,
+		"alwspeed": _clnt.Allwspd,
 		"isp":      false,
 		"flag":     "inprog",
 		"appvr":    "1.0",
@@ -256,17 +248,17 @@ func locationDt(_data []byte, lendata int, connection net.Conn) {
 		"postyp":   _courus[2:3],
 		"bearing":  _bearing,
 		"speed":    _data[19],
-		"vhid":     _clnt.imei}
+		"vhid":     _clnt.Imei}
 
-	if _clnt.allwspd > 0 {
+	if _clnt.Allwspd > 0 {
 
 		crspeed := int(_data[19])
 
-		fmt.Println(crspeed)
-		if crspeed > _clnt.allwspd {
+		//fmt.Println(crspeed)
+		if crspeed > _clnt.Allwspd {
 			// speed voilence
 			//fmt.Println(int(_data[19]))
-			go fcm.SendSpeedAlertTotopic(_clnt.imei, crspeed)
+			go fcm.SendSpeedAlertTotopic(_clnt.Imei, crspeed)
 			data["lstspd"] = crspeed
 			data["lstspdtm"] = time.Now()
 			data["isp"] = true
@@ -274,8 +266,8 @@ func locationDt(_data []byte, lendata int, connection net.Conn) {
 	}
 
 	//need to call mongo db
-	models.UpdateData(data, _clnt.imei, "loc")
-	checkGeofence(point, _data[19], _clnt.imei)
+	models.UpdateData(data, _clnt.Imei, "loc", nil)
+	checkGeofence(point, _data[19], _clnt.Imei)
 
 	//fmt.Println(fmt.Sprintf("%x", reply))
 	//send reply to terminal
@@ -285,4 +277,102 @@ func locationDt(_data []byte, lendata int, connection net.Conn) {
 // send points to check for geofence
 func checkGeofence(pont []float64, speed byte, imei string) {
 	go redigogeofence.SetValue(pont, speed, imei)
+}
+
+///alarm decoding
+func almDecode00() {
+
+}
+
+//decode alarm details
+func almDecode04(_data []byte, lendata int, connection net.Conn) {
+	_clnt := getClient(connection)
+	if _clnt.Imei == "" {
+		return
+	}
+
+	_dataT := bytes.Trim(_data, "\x00")
+	// 797900849404414c4d313d37353b414c4d323d44353b414c4d333d35463b535441313d34303b4459443d30313b534f533d393030343339303837342c2c3b43454e5445523d393030343339303837343b46454e43453d46656e63652c4f46462c302c302e3030303030302c302e3030303030302c3330302c494e206f72204f55542c313b00ef5cfa0d0a
+	//ALM1
+	// s := []byte{0x01}
+	// src := _data[7 : len(_data)-6]
+	srt := string(_dataT[6 : len(_dataT)-6])
+	arrcmt := strings.Split(srt, ";")
+
+	// alm1 := arrcmt[0] // ALM1;
+	// alm2 := arrcmt[1] // ALM2;
+	// alm3 := arrcmt[2] // ALM3;
+
+	//
+
+	DYDVAL := strings.SplitN(arrcmt[4], "=", -1)
+	src := []byte(DYDVAL[1])
+	dst := make([]byte, hex.DecodedLen(len(src)))
+	n, err := hex.Decode(dst, src)
+	if err != nil {
+		log.Fatal(err)
+	}
+	DYD := fmt.Sprintf("%08b", dst[:n])
+	oe := DYD[7:8]
+
+	if DYD[5:6] == "1" || DYD[6:7] == "1" {
+		return
+	}
+
+	eventData := bson.M{
+		"sertm": time.Now(),
+		"vhid":  _clnt.Imei,
+		"oe":    oe,
+		"evt":   "dd",
+		"actvt": "evt",
+	}
+
+	data := bson.M{
+		"sertm": time.Now(),
+		"vhid":  _clnt.Imei,
+		"oe":    oe,
+	}
+
+	models.UpdateData(data, _clnt.Imei, "dd", eventData)
+
+}
+
+//door status pin info
+func almDecode05(_data []byte, lendata int, connection net.Conn) {
+	_clnt := getClient(connection)
+	if _clnt.Imei == "" {
+		return
+	}
+	_clnt.Lstm = time.Now()
+	_prd := fmt.Sprintf("%08b", _data[6:7])
+	_prd = _prd[1 : len(_prd)-1]
+	// println(_prd[7:8])
+	val, _ := strconv.Atoi(_prd[7:8])
+	otherdata := bson.M{
+		"evt":   "d1",
+		"sertm": time.Now(),
+		"vhid":  _clnt.Imei,
+		"val":   val,
+		"actvt": "evt",
+	}
+
+	data := bson.M{
+		"sertm": time.Now(),
+		"imei":  _clnt.Imei,
+		"vhid":  _clnt.Imei,
+		"d1":    val,
+	}
+
+	models.UpdateData(data, _clnt.Imei, "d1", otherdata)
+
+}
+
+//command reply 02 june 2018
+
+func commandReply(_data []byte, lendata int, connection net.Conn) {
+	//78 78 2d 15 25 00 00 03 f0 437574206f666620746865206675656c20737570706c793a2053756363657373210002000e149d0d0a
+	_dataT := bytes.Trim(_data, "\x00")
+	data := binary.BigEndian.Uint32(_data[5:9])
+	stringtext := string(_dataT[9 : len(_dataT)-8])
+	go fcm.SendEventAlertTotopic(data, stringtext)
 }
