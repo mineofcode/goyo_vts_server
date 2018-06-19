@@ -6,6 +6,7 @@ import (
 	"goyo.in/gpstracker/const"
 	"goyo.in/gpstracker/tile"
 
+	"goyo.in/gpstracker/models"
 	"goyo.in/gpstracker/network"
 	// import "goyo.in/gpstracker/network"
 	// import "goyo.in/gpstracker/crc16"
@@ -25,20 +26,18 @@ func main() {
 }
 
 func startAll() {
-	//Start TCP server
 
-	// if err != nil {
-	// 	fmt.Println("Error TCP: ", err.Error())
-	// }
-
+	// jobs for history creation
 	go job.StartJob()
 
-	//go redigogeofence.Start()
+	//go redigogeofence.Start() client for tile18 server
 	go tile.GRpcRun()
 	//Start Rest API & Socket.io server
 	go func() {
 		restservice.RestfulAPIServiceInit("HTTP")
 	}()
+
+	models.Init()
 
 	en := network.TCPServer_new{Host: consts.TCPHost, Port: strconv.Itoa(consts.TCPPort), Timeout: 3000}
 	en.StartServer()

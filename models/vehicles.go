@@ -7,7 +7,7 @@ import (
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 	"goyo.in/gpstracker/datamodel"
-	patterns "goyo.in/gpstracker/patterns"
+	"goyo.in/gpstracker/db"
 )
 
 type Vhdata struct {
@@ -22,11 +22,25 @@ func GetVehicles(search interface{}, _sn *mgo.Session) []Vhdata {
 		defer _sn.Close()
 	}
 
-	c := col(_sn, patterns.ColVhcls)
+	c := col(_sn, db.ColVhcls)
 	var dResult1 []Vhdata
 	// fmt.Println("this ", frmt)
 
 	_ = c.Find(search).All(&dResult1)
+	return dResult1
+}
+
+func GetVehicle(vhid string, _sn *mgo.Session) []datamodel.Vehicles {
+	if _sn == nil {
+		_sn = getDBSession().Copy()
+		defer _sn.Close()
+	}
+
+	c := col(_sn, db.ColVhcls)
+	var dResult1 []datamodel.Vehicles
+	// fmt.Println("this ", frmt)
+
+	_ = c.Find(bson.M{"vhid": vhid}).Limit(1).All(&dResult1)
 	return dResult1
 }
 
@@ -36,7 +50,7 @@ func UpdateVehiclesHistoryDate(vhid string, histm time.Time, _sn *mgo.Session) {
 		defer _sn.Close()
 	}
 
-	c := col(_sn, patterns.ColVhcls)
+	c := col(_sn, db.ColVhcls)
 	if dberr := c.Update(bson.M{"vhid": vhid}, bson.M{"$set": bson.M{"histtm": histm}}); dberr != nil {
 		fmt.Println(dberr)
 	}
@@ -48,7 +62,7 @@ func AddVehiclesHistoryDate(histrywrp datamodel.SegmentWrapper, _sn *mgo.Session
 		defer _sn.Close()
 	}
 
-	c := col(_sn, patterns.ColHistory)
+	c := col(_sn, db.ColHistory)
 	if dberr, _ := c.Upsert(bson.M{"vhid": histrywrp.Vhid, "date": histrywrp.Date}, histrywrp); dberr != nil {
 		fmt.Println(dberr)
 	}
@@ -60,7 +74,7 @@ func GetStoredHistory(vhid string, histm string, _sn *mgo.Session) (result datam
 		defer _sn.Close()
 	}
 
-	c := col(_sn, patterns.ColHistory)
+	c := col(_sn, db.ColHistory)
 
 	//Parameters
 	//"2017-11-07T00:00:00+05:30"
@@ -85,7 +99,7 @@ func UpdateVehicleData(d interface{}, vhid interface{}) (result string, ipaddr s
 	var err error
 	var ip string
 	//fmt.Println(vhid, d)
-	c := col(_sn, patterns.ColVhcls)
+	c := col(_sn, db.ColVhcls)
 	if dberr := c.Update(bson.M{"vhid": vhid}, bson.M{"$set": d}); dberr != nil {
 		//fmt.Println(dberr)
 		result = dberr.Error()
@@ -115,7 +129,7 @@ func GetVehicleIP(vhid interface{}) (ipaddr string) {
 	defer _sn.Close()
 	var ip string
 	//fmt.Println(vhid, d)
-	c := col(_sn, patterns.ColVhcls)
+	c := col(_sn, db.ColVhcls)
 	var vh Vhdata
 
 	c.Find(bson.M{"vhid": vhid}).One(&vh)
@@ -135,7 +149,7 @@ func GetVehiclesData(vhid string) VhLoginData {
 	_sn := getDBSession().Copy()
 	defer _sn.Close()
 
-	c := col(_sn, patterns.ColVhcls)
+	c := col(_sn, db.ColVhcls)
 	var dResult1 VhLoginData
 	// fmt.Println("this ", frmt)
 

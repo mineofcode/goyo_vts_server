@@ -12,3 +12,11 @@ func CreateWrap(status string, data interface{}) bson.M {
 	}
 
 }
+
+type Response struct {
+	Status    bool        `json:"status"`
+	Message   string      `json:"msg"`
+	Error     string      `json:"error"`
+	StausCode int         `json:"statuscode"`
+	Data      interface{} `json:"data"`
+}

@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func main() {
+func main1() {
 
 	location, _ := time.LoadLocation("Asia/Kolkata")
 	// this should give you time in location

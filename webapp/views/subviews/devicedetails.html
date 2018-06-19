@@ -1,0 +1,9 @@
+<div class="card">
+    <div class="card-body">
+        {{.device.vhid}}
+        {{range $index, $val := .device}}
+           {{$val.vhid}}
+        {{end}}
+
+    </div>
+</div>

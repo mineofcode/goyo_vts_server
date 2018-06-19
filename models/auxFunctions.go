@@ -6,34 +6,23 @@ import (
 	"time"
 
 	"gopkg.in/mgo.v2"
-	patterns "goyo.in/gpstracker/patterns"
+	"goyo.in/gpstracker/db"
 )
 
 const (
-	vhclsCollection  = patterns.ColVhcls
-	vhtrpsCollection = patterns.ColVhtrps
+	vhclsCollection  = db.ColVhcls
+	vhtrpsCollection = db.ColVhtrps
 )
 
 var session *mgo.Session
 var errDial error
 
 // acceso a la DB por cada consulta
-func accessDB(collection string) *mgo.Collection {
-
-	session, errDial = patterns.GetSessErrMongoDBSession("Dial")
-
-	verifyErr(errDial)
-	session.SetMode(mgo.Monotonic, true)
-	col := session.DB(patterns.Dbname).C(collection)
-	return col
-}
-
-// acceso a la DB por cada consulta
 func getDBSession() *mgo.Session {
 	if session == nil {
 		fmt.Println("enter main - connecting to mongo")
 
-		session, errDial = patterns.GetSessErrMongoDBSession("DialWithInfo")
+		session, errDial = db.GetSessErrMongoDBSession("DialWithInfo")
 
 		fmt.Println("enter main - dial")
 
@@ -53,7 +42,7 @@ func GetSession() *mgo.Session {
 }
 
 func col(sess *mgo.Session, name string) *mgo.Collection {
-	return sess.DB(patterns.Dbname).C(name)
+	return sess.DB(db.Dbname).C(name)
 }
 
 // verifica el error
@@ -65,7 +54,7 @@ func verifyErr(err error) {
 }
 
 // genera un password aleatoriamente
-func generarPassword(longitud int) (cad string) {
+func GenerarPassword(longitud int) (cad string) {
 	rand.Seed(time.Now().UTC().UnixNano())
 	caracteres := "abcdefghijkmnpqrtuvwxyzABCDEFGHIJKLMNPQRTUVWXYZ2346789"
 	contraseña := ""

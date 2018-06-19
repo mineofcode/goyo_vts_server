@@ -1,0 +1,24 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "contact": {}
+    },
+    "paths": null,
+    "definitions": {
+        "models.Login": {
+            "title": "Login",
+            "type": "object",
+            "properties": {
+                "email": {
+                    "type": "string"
+                },
+                "pwd": {
+                    "type": "string"
+                },
+                "src": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

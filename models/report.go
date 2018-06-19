@@ -7,7 +7,7 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 	"goyo.in/gpstracker/datamodel"
-	patterns "goyo.in/gpstracker/patterns"
+	"goyo.in/gpstracker/db"
 )
 
 type MilageReport struct {
@@ -40,7 +40,7 @@ func getMilageReport(params interface{}) (ret []interface{}, err error) {
 	defer _sn.Close()
 
 	var result []interface{}
-	c := col(_sn, patterns.ColHistory)
+	c := col(_sn, db.ColHistory)
 	param := reflect.ValueOf(params)
 
 	//fmt.Println(param.MapIndex(reflect.ValueOf("abc")).IsValid())
@@ -96,7 +96,7 @@ func getMilageReport(params interface{}) (ret []interface{}, err error) {
 
 		bson.M{
 			"$lookup": bson.M{
-				"from":         patterns.ColVhcls,
+				"from":         db.ColVhcls,
 				"localField":   "_id.vhid",
 				"foreignField": "vhid",
 				"as":           "vhname",
@@ -144,7 +144,7 @@ func getSpeedReport(params interface{}) (ret []interface{}, err error) {
 	defer _sn.Close()
 
 	var result []interface{}
-	c := col(_sn, patterns.ColVhtrps)
+	c := col(_sn, db.ColVhtrps)
 
 	//fmt.Println(param.MapIndex(reflect.ValueOf("abc")).IsValid())
 
@@ -186,7 +186,7 @@ func getSpeedReport(params interface{}) (ret []interface{}, err error) {
 
 		bson.M{
 			"$lookup": bson.M{
-				"from":         patterns.ColVhcls,
+				"from":         db.ColVhcls,
 				"localField":   "_id.vhid",
 				"foreignField": "vhid",
 				"as":           "vhname",
@@ -218,7 +218,7 @@ func getSpeedDetailsReport(params interface{}) (ret []interface{}, err error) {
 	defer _sn.Close()
 
 	var result []interface{}
-	c := col(_sn, patterns.ColVhtrps)
+	c := col(_sn, db.ColVhtrps)
 	param := reflect.ValueOf(params)
 
 	//fmt.Println(param.MapIndex(reflect.ValueOf("abc")).IsValid())
@@ -243,7 +243,7 @@ func getSpeedDetailsReport(params interface{}) (ret []interface{}, err error) {
 		},
 		// bson.M{
 		// 	"$lookup": bson.M{
-		// 		"from":         patterns.ColVhcls,
+		// 		"from":         db.ColVhcls,
 		// 		"localField":   "_id.vhid",
 		// 		"foreignField": "vhid",
 		// 		"as":           "vhname",

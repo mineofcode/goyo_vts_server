@@ -1,0 +1,14 @@
+swagger: "2.0"
+info: {}
+paths: {}
+definitions:
+  models.Login:
+    title: Login
+    type: object
+    properties:
+      email:
+        type: string
+      pwd:
+        type: string
+      src:
+        type: string

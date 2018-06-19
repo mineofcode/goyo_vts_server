@@ -30,10 +30,11 @@ func RestfulAPIServiceInit(method string) {
 	// }))
 
 	beego.BConfig.RunMode = consts.BeegoMode
-	beego.BConfig.WebConfig.AutoRender = false
+	beego.BConfig.WebConfig.AutoRender = true
 	beego.BConfig.WebConfig.EnableDocs = true
 	beego.BConfig.WebConfig.DirectoryIndex = true
 	beego.BConfig.CopyRequestBody = true
+	beego.BConfig.WebConfig.ViewsPath = "webapp/views"
 	//   beego.BConfig.Listen.HTTPSCertFile = "tls-ssl/file-rest.crt"
 	//   beego.BConfig.Listen.HTTPSKeyFile = "tls-ssl/file-rest.key"
 	beego.BConfig.Listen.HTTPPort = consts.HTTPPort
@@ -46,5 +47,6 @@ func RestfulAPIServiceInit(method string) {
 		beego.BConfig.Listen.EnableHTTPS = true
 	}
 
+	beego.SetStaticPath("/static", "webapp/statics")
 	beego.Run()
 }

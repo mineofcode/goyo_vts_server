@@ -5,7 +5,7 @@ import "time"
 var opts *Options
 
 const (
-	BeegoMode = "prod" // dev || prod
+	BeegoMode = "dev" // dev || prod
 
 	MGODbip   = "127.0.0.1"
 	MGODbport = "27017"

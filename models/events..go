@@ -3,14 +3,14 @@ package models
 import (
 	"fmt"
 
-	patterns "goyo.in/gpstracker/patterns"
+	"goyo.in/gpstracker/db"
 )
 
 func CreateEvent(d interface{}, vhid string) {
 	_sn := getDBSession().Copy()
 	defer _sn.Close()
 
-	ch := col(_sn, patterns.ColVHevts)
+	ch := col(_sn, db.ColVHevts)
 	err := ch.Insert(d)
 
 	if err != nil {

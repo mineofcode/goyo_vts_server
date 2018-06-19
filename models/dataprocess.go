@@ -6,7 +6,7 @@ import (
 
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
-	patterns "goyo.in/gpstracker/patterns"
+	"goyo.in/gpstracker/db"
 )
 
 type TimeWiseData struct {
@@ -24,7 +24,7 @@ func GetDateData(vehid string, date string, _sn *mgo.Session) []TimeWiseData {
 		defer _sn.Close()
 	}
 
-	c := col(_sn, patterns.ColVhtrps)
+	c := col(_sn, db.ColVhtrps)
 
 	//Parameters
 	//"2017-11-07T00:00:00+05:30"

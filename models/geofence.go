@@ -10,7 +10,6 @@ import (
 	opts "goyo.in/gpstracker/const"
 	"goyo.in/gpstracker/datamodel"
 	"goyo.in/gpstracker/db"
-	patterns "goyo.in/gpstracker/patterns"
 )
 
 const (
@@ -28,7 +27,7 @@ func CreateGeoFence(params datamodel.GeoFenceModelAr) (result []datamodel.GeoFen
 	}
 	defer tile38con.Close()
 	//fmt.Println(vhid, d)
-	c := col(_sn, patterns.ColGeofence)
+	c := col(_sn, db.ColGeofence)
 
 	response := []datamodel.GeoFenceResponse{}
 	for _, param := range params.Data {
@@ -161,7 +160,7 @@ func GetGeoFence(params interface{}) (result []datamodel.GeoFenceModel, err erro
 
 	//fmt.Println(vhid, d)
 
-	c := col(_sn, patterns.ColGeofence)
+	c := col(_sn, db.ColGeofence)
 	var datamodel []datamodel.GeoFenceModel
 	c.Find(params).All(&datamodel)
 	return datamodel, nil
@@ -174,7 +173,7 @@ func GetGeoFenceSingle(params interface{}) (result datamodel.GeoFenceModel, err 
 
 	//fmt.Println(vhid, d)
 
-	c := col(_sn, patterns.ColGeofence)
+	c := col(_sn, db.ColGeofence)
 	var datamodel datamodel.GeoFenceModel
 	c.Find(params).One(&datamodel)
 	return datamodel, nil
@@ -200,7 +199,7 @@ func DeleteGeoFence(params datamodel.GetGeoFenceParams) (result interface{}, err
 	} else {
 		qury = bson.M{"imei": params.Imei}
 	}
-	c := col(_sn, patterns.ColGeofence)
+	c := col(_sn, db.ColGeofence)
 	info, err1 := c.RemoveAll(qury)
 
 	if err1 != nil {

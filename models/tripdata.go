@@ -6,7 +6,7 @@ import (
 
 	"gopkg.in/mgo.v2/bson"
 	"goyo.in/gpstracker/datamodel"
-	patterns "goyo.in/gpstracker/patterns"
+	"goyo.in/gpstracker/db"
 	"goyo.in/gpstracker/shared"
 )
 
@@ -30,7 +30,7 @@ func GetLastStatus(trpparams ParamsTripdata) (ret []datamodel.Vehicles, err erro
 	defer _sn.Close()
 
 	var result []datamodel.Vehicles
-	c := col(_sn, patterns.ColVhcls)
+	c := col(_sn, db.ColVhcls)
 
 	//_vh := trpparams.Vhids //strings.Split(trpparams.Vhids, ",")
 	err = c.Find(bson.M{"vhid": bson.M{"$in": trpparams.Vhids}}).All(&result)
@@ -47,7 +47,7 @@ func UpdateData(d interface{}, vhid string, f string, otherdata interface{}) (er
 	defer _sn.Close()
 
 	//fmt.Println(vhid, d)
-	c := col(_sn, patterns.ColVhcls)
+	c := col(_sn, db.ColVhcls)
 	if dberr := c.Update(bson.M{"vhid": vhid}, bson.M{"$set": d}); dberr != nil {
 		fmt.Println(dberr)
 		if dberr.Error() == "not found" {
@@ -63,7 +63,7 @@ func UpdateData(d interface{}, vhid string, f string, otherdata interface{}) (er
 	// send in history
 	if (f == "reg") || (f == "loc") {
 		// insert in history table
-		ch := col(_sn, patterns.ColVhtrps)
+		ch := col(_sn, db.ColVhtrps)
 		err = ch.Insert(d)
 		go SendLive(vhid, bson.M{"evt": "data", "data": d})
 		// send to socket server
@@ -73,7 +73,7 @@ func UpdateData(d interface{}, vhid string, f string, otherdata interface{}) (er
 
 	} else if f == "d1" {
 		// insert in history table
-		ch := col(_sn, patterns.ColVHevts)
+		ch := col(_sn, db.ColVHevts)
 		err = ch.Insert(otherdata)
 		// send to socket server
 		go SendLive(vhid, bson.M{"evt": "data", "data": otherdata})
@@ -113,7 +113,7 @@ func GetOverSpeedDataCount(trpparams ParamsTripHistorydata) (count int, err erro
 	// fmt.Println(tod)
 	//_vh := trpparams.Vhids //strings.Split(trpparams.Vhids, ",")
 
-	c := col(_sn, patterns.ColVhtrps)
+	c := col(_sn, db.ColVhtrps)
 	count, err = c.Find(bson.M{"vhid": bson.M{"$in": trpparams.Vhids},
 		"sertm": bson.M{"$gte": fd, "$lte": tod},
 		"isp":   true}).Count()
@@ -134,7 +134,7 @@ func GetOverSpeedDataCount(trpparams ParamsTripHistorydata) (count int, err erro
 
 // 	//_vh := trpparams.Vhids //strings.Split(trpparams.Vhids, ",")
 
-// 	c := col(_sn, patterns.ColVhtrps)
+// 	c := col(_sn, db.ColVhtrps)
 // 	count, err = c.Find(bson.M{"vhid": bson.M{"$in": trpparams.Vhids},
 // 		"date": bson.M{"$gte": fd, "$lte": tod},
 // 		"isp":  true}).Count()
