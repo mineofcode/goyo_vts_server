@@ -1,0 +1,15 @@
+{
+  "name": "history_creator",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "mongodb": "^3.0.10",
+    "time-aware-polyline": "^0.2.2"
+  }
+}

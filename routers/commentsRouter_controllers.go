@@ -23,6 +23,30 @@ func init() {
 			MethodParams: param.Make(),
 			Params: nil})
 
+	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:DeviceMasterController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:DeviceMasterController"],
+		beego.ControllerComments{
+			Method: "GetDevices",
+			Router: `/`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams: param.Make(),
+			Params: nil})
+
+	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:DeviceMasterController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:DeviceMasterController"],
+		beego.ControllerComments{
+			Method: "CheckDevice",
+			Router: `/`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams: param.Make(),
+			Params: nil})
+
+	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:DeviceMasterController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:DeviceMasterController"],
+		beego.ControllerComments{
+			Method: "AddDevices",
+			Router: `/`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams: param.Make(),
+			Params: nil})
+
 	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:GetGeoFenceController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:GetGeoFenceController"],
 		beego.ControllerComments{
 			Method: "Post",
@@ -106,6 +130,30 @@ func init() {
 	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:ReportController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:ReportController"],
 		beego.ControllerComments{
 			Method: "Post",
+			Router: `/`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams: param.Make(),
+			Params: nil})
+
+	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:SIMCardController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:SIMCardController"],
+		beego.ControllerComments{
+			Method: "GetSIM",
+			Router: `/`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams: param.Make(),
+			Params: nil})
+
+	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:SIMCardController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:SIMCardController"],
+		beego.ControllerComments{
+			Method: "CheckSIM",
+			Router: `/`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams: param.Make(),
+			Params: nil})
+
+	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:SIMCardController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:SIMCardController"],
+		beego.ControllerComments{
+			Method: "AddSIM",
 			Router: `/`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams: param.Make(),

@@ -21,4 +21,6 @@ const (
 	ColSequence = "counters"
 	//ColDeviceEnv 'devinv' Collection
 	ColDeviceEnv = "devinv"
+	//ColSimEnv 'siminv' Collection
+	ColSimEnv = "siminv"
 )
