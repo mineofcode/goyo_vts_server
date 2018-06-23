@@ -88,7 +88,9 @@ func init() {
 			beego.NSInclude(
 				&controllers.VehicleController{},
 			),
+			beego.NSRouter("/getVehicleByUID", &controllers.VehicleController{}, "post:GetVehicleByUID"),
 		),
+		
 
 		beego.NSNamespace("/tripapi/getOverSpeedCount",
 			beego.NSInclude(
@@ -99,7 +101,7 @@ func init() {
 			beego.NSRouter("/check", &controllers.DeviceMasterController{}, "get,post:CheckDevice"),
 			beego.NSRouter("/:id", &controllers.DeviceMasterController{}, "get:GetDevices"),
 			beego.NSRouter("/add", &controllers.DeviceMasterController{}, "post:AddDevices"),
-			beego.NSRouter("/activate", &controllers.DeviceMasterController{}, "post:DeviceActivation"),
+			beego.NSRouter("/activate", &controllers.VehicleController{}, "post:ActivateVehicle"),
 		),
 		beego.NSNamespace("/tripapi/sim",
 			beego.NSRouter("/add", &controllers.SIMCardController{}, "post:AddSIM"),

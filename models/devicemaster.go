@@ -51,7 +51,7 @@ func CheckDeviceActivate(imei string) utils.Response {
 	//Check imei in vehicles
 	ColVhcls := col(_sn, db.ColVhcls)
 	var vehicles datamodel.Vehicles
-	ColVhcls.Find(bson.M{"imei": imei}).One(&vehicles)
+	ColVhcls.Find(bson.M{"vhid": imei}).One(&vehicles)
 
 	if vehicles.Vhid != "" && vehicles.UID != "" {
 		resp.Error = "This device is already registered!!! Please contact administrator."

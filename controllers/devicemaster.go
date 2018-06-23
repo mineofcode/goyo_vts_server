@@ -17,7 +17,7 @@ type DeviceMasterController struct {
 }
 
 type deviceM struct {
-	IMEI string `json:"imei"`
+	IMEI string `json:"vhid"`
 }
 
 // @Title Create
@@ -99,7 +99,7 @@ func (this *DeviceMasterController) DeviceActivation() {
 	json.Unmarshal(this.Ctx.Input.RequestBody, &ob)
 
 	//this.Ctx.Input.Bind(&imei, "imei")
-	fmt.Println(imei)
+	//fmt.Println(imei)
 	result := models.DeviceActivation(ob)
 	this.Data["json"] = utils.CreateWrap("200", result)
 	this.ServeJSON()

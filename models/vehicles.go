@@ -8,6 +8,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"goyo.in/gpstracker/datamodel"
 	"goyo.in/gpstracker/db"
+	"goyo.in/gpstracker/utils"
 )
 
 type Vhdata struct {
@@ -24,9 +25,9 @@ func GetVehicles(search interface{}, _sn *mgo.Session) []Vhdata {
 
 	c := col(_sn, db.ColVhcls)
 	var dResult1 []Vhdata
-	// fmt.Println("this ", frmt)
 
 	_ = c.Find(search).All(&dResult1)
+
 	return dResult1
 }
 
@@ -38,7 +39,6 @@ func GetVehicle(vhid string, _sn *mgo.Session) []datamodel.Vehicles {
 
 	c := col(_sn, db.ColVhcls)
 	var dResult1 []datamodel.Vehicles
-	// fmt.Println("this ", frmt)
 
 	_ = c.Find(bson.M{"vhid": vhid}).Limit(1).All(&dResult1)
 	return dResult1
@@ -51,6 +51,7 @@ func UpdateVehiclesHistoryDate(vhid string, histm time.Time, _sn *mgo.Session) {
 	}
 
 	c := col(_sn, db.ColVhcls)
+
 	if dberr := c.Update(bson.M{"vhid": vhid}, bson.M{"$set": bson.M{"histtm": histm}}); dberr != nil {
 		fmt.Println(dberr)
 	}
@@ -76,33 +77,99 @@ func GetStoredHistory(vhid string, histm string, _sn *mgo.Session) (result datam
 
 	c := col(_sn, db.ColHistory)
 
-	//Parameters
-	//"2017-11-07T00:00:00+05:30"
 	frmt, err := time.Parse(time.RFC3339, histm)
-	//fmt.Println(frmt)
-	//fmt.Println(tot)
+	
 	if err != nil {
 		fmt.Println("error")
 	}
 
 	var dR datamodel.SegmentWrapper
-	// fmt.Println("this ", frmt)
-
 	err = c.Find(bson.M{"vhid": vhid, "date": frmt}).One(&dR)
+
 	return dR, err
 }
 
-//update Insert vehicledata
-func UpdateVehicleData(d interface{}, vhid interface{}) (result string, ipaddr string) {
+// Get Vehicle By User ID
+
+type GetVehicelListByUID struct {
+	UID      string        `bson:"uid" json:"uid"`
+	Vhid     string        `bson:"vhid" json:"vhid"`
+	VhNm     string        `bson:"vhname" json:"vhname"`
+	Vhd      interface{}   `bson:"vhd" json:"vhd"`
+	}
+
+func GetVehicleByUID(uid string) (result []GetVehicelListByUID, err error) {
+	_sn := getDBSession().Copy()
+	defer _sn.Close()
+
+	c := col(_sn, db.ColVhcls)
+
+	if err != nil {
+		fmt.Println("error")
+	}
+
+	var dR []GetVehicelListByUID;
+
+	err = c.Find(bson.M{"uid": uid}).All(&dR)
+	return dR, err
+}
+
+// Activate Vehicle Data
+
+func ActivateVehicleData(d interface{}, vhid string) (utils.Response) {	
 	_sn := getDBSession().Copy()
 	defer _sn.Close()
 	var err error
-	var ip string
-	//fmt.Println(vhid, d)
+
+	resp := CheckDeviceActivate(vhid)
+
+	if(!resp.Status) {
+		return resp
+	}
+
 	c := col(_sn, db.ColVhcls)
+
 	if dberr := c.Update(bson.M{"vhid": vhid}, bson.M{"$set": d}); dberr != nil {
-		//fmt.Println(dberr)
+		resp.Error = dberr.Error()
+		resp.Status = false;
+
+		if dberr.Error() == "not found" {
+			_, err = c.UpsertId(bson.M{"vhid": vhid}, bson.M{"$set": d})
+			
+			if err != nil {
+				resp.Error = err.Error()
+				resp.Status = false;
+				return resp;
+			}
+
+			resp.Message = "Activated Successfully"
+			resp.Status = true;
+		}
+	} else {
+		resp.Message = "Updated Successfully"
+		resp.Status = true;
+	} 
+	
+	// var vh ActiVateResult
+	// c.Find(bson.M{"vhid": vhid}).One(&vh)
+	
+	return resp;
+}
+
+//update Insert vehicledata
+
+func UpdateVehicleData(d interface{}, vhid interface{}) (result string, ipaddr string) {
+	_sn := getDBSession().Copy()
+	defer _sn.Close()
+
+	var err error
+	var ip string
+	
+	c := col(_sn, db.ColVhcls)
+
+	if dberr := c.Update(bson.M{"vhid": vhid}, bson.M{"$set": d}); dberr != nil {
 		result = dberr.Error()
+
 		if dberr.Error() == "not found" {
 			_, err = c.UpsertId(bson.M{"vhid": vhid}, bson.M{"$set": d})
 			if err != nil {
@@ -111,7 +178,6 @@ func UpdateVehicleData(d interface{}, vhid interface{}) (result string, ipaddr s
 			result = "Created Successfully"
 		}
 	} else {
-
 		var vh Vhdata
 
 		c.Find(bson.M{"vhid": vhid}).One(&vh)
@@ -120,15 +186,18 @@ func UpdateVehicleData(d interface{}, vhid interface{}) (result string, ipaddr s
 
 		result = "Updated Successfully"
 	}
+
 	return result, ip
 }
 
 //update Insert vehicledata
+
 func GetVehicleIP(vhid interface{}) (ipaddr string) {
 	_sn := getDBSession().Copy()
 	defer _sn.Close()
+
 	var ip string
-	//fmt.Println(vhid, d)
+	
 	c := col(_sn, db.ColVhcls)
 	var vh Vhdata
 
@@ -151,7 +220,6 @@ func GetVehiclesData(vhid string) VhLoginData {
 
 	c := col(_sn, db.ColVhcls)
 	var dResult1 VhLoginData
-	// fmt.Println("this ", frmt)
 
 	_ = c.Find(bson.M{"vhid": vhid}).One(&dResult1)
 	return dResult1
