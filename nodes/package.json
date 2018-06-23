@@ -9,6 +9,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "dateformat": "^3.0.3",
     "mongodb": "^3.0.10",
     "time-aware-polyline": "^0.2.2"
   }

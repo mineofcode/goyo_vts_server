@@ -99,6 +99,7 @@ func init() {
 			beego.NSRouter("/check", &controllers.DeviceMasterController{}, "get,post:CheckDevice"),
 			beego.NSRouter("/:id", &controllers.DeviceMasterController{}, "get:GetDevices"),
 			beego.NSRouter("/add", &controllers.DeviceMasterController{}, "post:AddDevices"),
+			beego.NSRouter("/activate", &controllers.DeviceMasterController{}, "post:DeviceActivation"),
 		),
 		beego.NSNamespace("/tripapi/sim",
 			beego.NSRouter("/add", &controllers.SIMCardController{}, "post:AddSIM"),

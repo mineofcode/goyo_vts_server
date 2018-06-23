@@ -6,6 +6,7 @@ import (
 	"gopkg.in/mgo.v2/bson"
 	"goyo.in/gpstracker/datamodel"
 	"goyo.in/gpstracker/db"
+	"goyo.in/gpstracker/reqprops"
 	"goyo.in/gpstracker/utils"
 )
 
@@ -58,11 +59,27 @@ func CheckDeviceActivate(imei string) utils.Response {
 		resp.StausCode = 0
 		return resp
 	}
-
+	resp.Message = "Device is available to register."
 	resp.Error = ""
 	resp.Status = true
+	resp.Data = vehicles
 	resp.StausCode = 0
 	return resp
+
+}
+
+func DeviceActivation(data reqprops.DeviceActivationProp) utils.Response {
+	result := CheckDeviceActivate(data.IMEI)
+	resp := utils.Response{}
+	_sn := getDBSession().Copy()
+	defer _sn.Close()
+
+	if result.Status {
+		resp.Status = true
+
+		return resp
+	}
+	return result
 
 }
 

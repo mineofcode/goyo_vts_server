@@ -33,14 +33,6 @@ func init() {
 
 	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:DeviceMasterController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:DeviceMasterController"],
 		beego.ControllerComments{
-			Method: "CheckDevice",
-			Router: `/`,
-			AllowHTTPMethods: []string{"post"},
-			MethodParams: param.Make(),
-			Params: nil})
-
-	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:DeviceMasterController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:DeviceMasterController"],
-		beego.ControllerComments{
 			Method: "AddDevices",
 			Router: `/`,
 			AllowHTTPMethods: []string{"post"},

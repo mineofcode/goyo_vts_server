@@ -1,14 +1,13 @@
 var polylineUtils = require('time-aware-polyline');
+var dateFormat = require('dateformat');
 var a = new polylineUtils.TimeAwareEncoder()
 var points = [
-    [19.13626, 72.92506, '2016-07-21T05:43:09+00:00'],
-    [19.13597, 72.92495, '2016-07-21T05:43:15+00:00'],
-    [19.13553, 72.92469, '2016-07-21T05:43:21+00:00']
+  
 ]
-var encode = a.encodeTimeAwarePolyline(points)
 
-console.log(encode)
-console.log(a.decodeTimeAwarePolyline(encode))
+
+
+// console.log(a.decodeTimeAwarePolyline(encode))
 
 var MongoClient = require('mongodb').MongoClient;
 var url = "mongodb://localhost:27017/";
@@ -18,11 +17,28 @@ MongoClient.connect(url, function(err, db) {
   console.log("Database created!");
 
   var dbo = db.db("training2");
-  var query = { vhid: "351608085548159",actvt:"loc", sertm:{"$lte":"2017-11-06T00:00:00.000Z"} };
+  var query = { vhid: "351608085548159",actvt:"loc", sertm:{
+      "$gte":new Date("2017-10-04T18:30:00+530")
+    }};
   dbo.collection("vhtrps").find(query).toArray(function(err, result) {
     if (err) throw err;
     console.log(result);
+    for (let i = 0; i < 2; i++) {
+        const element = result[i];
+        console.log(dateFormat(element.sertm,"yyyy-mm-dd'T'hh:MM:ss+05:30"))
+        points.push([ element.loc[1],
+            element.loc[0],
+            dateFormat(element.sertm,"yyyy-mm-dd'T'hh:MM:ss+05:30")
+            ])
+        }
+   
+
     db.close();
+
+    var encode1 = a.encodeTimeAwarePolyline(points)
+    console.log(encode1)
+
+    console.log(a.decodeTimeAwarePolyline(encode1))
   });
 
 
