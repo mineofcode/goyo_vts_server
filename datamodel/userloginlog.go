@@ -13,6 +13,7 @@ type (
 		LoginTime  time.Time   `bson:"login_time" json:"-"`
 		Source     string      `bson:"src" json:"src"` // from google, facebook
 		LogoutTime time.Time   `bson:"logouttime" json:"logouttime"`
+		Active     bool        `bson:"active" json:"active"`
 		Extra      interface{} `bson:"extra" json:"-"`
 	}
 )

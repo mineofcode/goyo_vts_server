@@ -33,14 +33,27 @@ func VerifyLogin(user Login) (result utils.Response, err error) {
 
 	var exists datamodel.UserSelect
 
-	err = c.Find(bson.M{"email": user.Email}).One(&exists)
+	var query = bson.M{}
+	if utils.ValidateEmail(user.Email) {
+		query = bson.M{"email": user.Email}
+
+	} else {
+		query = bson.M{"mob": user.Email}
+	}
+
+	err = c.Find(query).One(&exists)
 
 	if err != nil && err.Error() == "not found" {
 		response.Message = "Invalid Login"
+
 		response.Status = false
 		response.StausCode = 2
+	} else if !exists.Active {
+		response.Message = "OTP Not verified!"
+		response.Data = exists.Mobile
+		response.Status = false
+		response.StausCode = 3
 	} else {
-
 		//update session in main table
 		sessionid = GetNextSequence(_sn, "session")
 		response.Message = "Login Successfully"

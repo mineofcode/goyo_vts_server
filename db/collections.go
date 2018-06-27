@@ -23,4 +23,6 @@ const (
 	ColDeviceEnv = "devinv"
 	//ColSimEnv 'siminv' Collection
 	ColSimEnv = "siminv"
+	//ColMoM 'mom' Collection
+	ColMoM = "mom"
 )

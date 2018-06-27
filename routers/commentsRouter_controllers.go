@@ -49,23 +49,7 @@ func init() {
 
 	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:LoginController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:LoginController"],
 		beego.ControllerComments{
-			Method: "Post",
-			Router: `/`,
-			AllowHTTPMethods: []string{"post"},
-			MethodParams: param.Make(),
-			Params: nil})
-
-	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:LoginController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:LoginController"],
-		beego.ControllerComments{
-			Method: "Get",
-			Router: `/:username/:passwd`,
-			AllowHTTPMethods: []string{"get"},
-			MethodParams: param.Make(),
-			Params: nil})
-
-	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:LoginSessionController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:LoginSessionController"],
-		beego.ControllerComments{
-			Method: "Post",
+			Method: "Login",
 			Router: `/`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams: param.Make(),
@@ -73,15 +57,7 @@ func init() {
 
 	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:LoginSessionController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:LoginSessionController"],
 		beego.ControllerComments{
-			Method: "Get",
-			Router: `/:username/:passwd`,
-			AllowHTTPMethods: []string{"get"},
-			MethodParams: param.Make(),
-			Params: nil})
-
-	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:LogoutController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:LogoutController"],
-		beego.ControllerComments{
-			Method: "Post",
+			Method: "LoginSession",
 			Router: `/`,
 			AllowHTTPMethods: []string{"post"},
 			MethodParams: param.Make(),
@@ -89,9 +65,17 @@ func init() {
 
 	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:LogoutController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:LogoutController"],
 		beego.ControllerComments{
-			Method: "Get",
-			Router: `/:username/:passwd`,
-			AllowHTTPMethods: []string{"get"},
+			Method: "Logout",
+			Router: `/`,
+			AllowHTTPMethods: []string{"post"},
+			MethodParams: param.Make(),
+			Params: nil})
+
+	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:MoMController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:MoMController"],
+		beego.ControllerComments{
+			Method: "Save",
+			Router: `/`,
+			AllowHTTPMethods: []string{"post"},
 			MethodParams: param.Make(),
 			Params: nil})
 
@@ -105,17 +89,9 @@ func init() {
 
 	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:RegisterController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:RegisterController"],
 		beego.ControllerComments{
-			Method: "Post",
+			Method: "Register",
 			Router: `/`,
 			AllowHTTPMethods: []string{"post"},
-			MethodParams: param.Make(),
-			Params: nil})
-
-	beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:RegisterController"] = append(beego.GlobalControllerRouter["goyo.in/gpstracker/controllers:RegisterController"],
-		beego.ControllerComments{
-			Method: "Get",
-			Router: `/:username/:passwd`,
-			AllowHTTPMethods: []string{"get"},
 			MethodParams: param.Make(),
 			Params: nil})
 

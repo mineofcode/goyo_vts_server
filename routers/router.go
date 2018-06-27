@@ -14,27 +14,15 @@ func init() {
 	//
 
 	beego.AddNamespace(beego.NewNamespace("/"+namespaces[0],
-		beego.NSNamespace("/tripapi/login",
-			beego.NSInclude(
-				&controllers.LoginController{},
-			),
-		),
-		beego.NSNamespace("/tripapi/logout",
-			beego.NSInclude(
-				&controllers.LogoutController{},
-			),
+		beego.NSNamespace("/tripapi/user",
+			beego.NSRouter("/login", &controllers.LoginController{}, "post:Login"),
+			beego.NSRouter("/logout", &controllers.LogoutController{}, "post:Logout"),
+			beego.NSRouter("/register", &controllers.RegisterController{}, "post:Register"),
+			beego.NSRouter("/verifyotp", &controllers.RegisterController{}, "post:VerifyOtp"),
+			beego.NSRouter("/resendotp", &controllers.RegisterController{}, "post:ResendOtp"),
+			beego.NSRouter("/loginsession", &controllers.LoginSessionController{}, "post:LoginSession"),
 		),
 
-		beego.NSNamespace("/tripapi/loginsession",
-			beego.NSInclude(
-				&controllers.LoginSessionController{},
-			),
-		),
-		beego.NSNamespace("/tripapi/register",
-			beego.NSInclude(
-				&controllers.RegisterController{},
-			),
-		),
 		beego.NSNamespace("/tripapi/getvahicleupdates",
 			beego.NSInclude(
 				&controllers.TripDataController{},
@@ -90,7 +78,6 @@ func init() {
 			),
 			beego.NSRouter("/getVehicleByUID", &controllers.VehicleController{}, "post:GetVehicleByUID"),
 		),
-		
 
 		beego.NSNamespace("/tripapi/getOverSpeedCount",
 			beego.NSInclude(
@@ -105,6 +92,10 @@ func init() {
 		),
 		beego.NSNamespace("/tripapi/sim",
 			beego.NSRouter("/add", &controllers.SIMCardController{}, "post:AddSIM"),
+		),
+		beego.NSNamespace("/tripapi/mom",
+			beego.NSRouter("/save", &controllers.MoMController{}, "post:Save"),
+			beego.NSRouter("/get", &controllers.MoMController{}, "post:Get"),
 		),
 	))
 

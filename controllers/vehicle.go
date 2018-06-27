@@ -1,8 +1,9 @@
 package controllers
 
 import (
-	"goyo.in/gpstracker/datamodel"
 	"encoding/json"
+
+	"goyo.in/gpstracker/datamodel"
 
 	"goyo.in/gpstracker/protocal"
 
@@ -20,7 +21,7 @@ type VehicleController struct {
 type vhmod struct {
 	Vhid     string `json:"vhid"`
 	Alwspeed int    `json:"alwspeed"`
-	UID string `json:"uid"`
+	UID      string `json:"uid"`
 }
 
 // Post Vehicle
@@ -30,7 +31,7 @@ func (o *VehicleController) Post() {
 	o.Ctx.ResponseWriter.Header().Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 	o.Ctx.ResponseWriter.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 
-	var ob interface{}
+	var ob map[string]interface{}
 	json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
 
 	var response datamodel.Vehicles
@@ -56,7 +57,7 @@ func (o *VehicleController) ActivateVehicle() {
 	o.Ctx.ResponseWriter.Header().Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 	o.Ctx.ResponseWriter.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
 
-	var ob interface{}
+	var ob map[string]interface{}
 	json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
 
 	var response vhmod
@@ -78,11 +79,18 @@ func (o *VehicleController) GetVehicleByUID() {
 
 	var ob interface{}
 	json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
-
+	// switch v := ob.(type) {
+	// case int:
+	// 	// v is an int here, so e.g. v + 1 is possible.
+	// 	fmt.Printf("Integer: %v", v)
+	// default:
+	// 	// And here I'm feeling dumb. ;)
+	// 	fmt.Printf("I don't know, ask stackoverflow.", v)
+	// }
 	var response vhmod
 
 	_ = json.Unmarshal(o.Ctx.Input.RequestBody, &response)
-	actres, _:= models.GetVehicleByUID(response.UID)
+	actres, _ := models.GetVehicleByUID(response.UID)
 
 	o.Data["json"] = utils.CreateWrap("200", actres)
 
