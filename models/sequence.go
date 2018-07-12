@@ -52,3 +52,10 @@ setagain:
 
 	return doc.Seq
 }
+
+const (
+	SEQVehicleID = "vehicleid"
+	SEQUserID    = "uid"
+	SEQSessionID = "session"
+	SEQFuelId    = "fuelid"
+)

@@ -39,6 +39,7 @@ func CheckDeviceActivate(imei string) utils.Response {
 	//Check imei in inventory
 	ColDeviceEnv := col(_sn, db.ColDeviceEnv)
 	var deviceMaster datamodel.DeviceMaster
+
 	ColDeviceEnv.Find(bson.M{"imei": imei}).One(&deviceMaster)
 
 	// if imei not found
@@ -62,7 +63,7 @@ func CheckDeviceActivate(imei string) utils.Response {
 	resp.Message = "Device is available to register."
 	resp.Error = ""
 	resp.Status = true
-	resp.Data = vehicles
+	resp.Data = deviceMaster.SimNo
 	resp.StausCode = 0
 	return resp
 
@@ -87,10 +88,10 @@ func DeviceActivation(data reqprops.DeviceActivationProp) utils.Response {
 func CreateDeviceEntry(data datamodel.DeviceMaster) utils.Response {
 	_sn := getDBSession().Copy()
 	defer _sn.Close()
-	data.CreateOn = time.Now()
 
 	validerr := GetValidator().Struct(data)
-
+	data.CreateOn = time.Now()
+	data.UpdateOn = time.Now()
 	resp := utils.Response{}
 
 	if validerr != nil {
@@ -103,7 +104,9 @@ func CreateDeviceEntry(data datamodel.DeviceMaster) utils.Response {
 	//Check imei in inventory
 	ColDeviceEnv := col(_sn, db.ColDeviceEnv)
 
-	err := ColDeviceEnv.Insert(data)
+	_, err := ColDeviceEnv.Upsert(bson.M{"imei": data.Imei}, bson.M{"$set": data})
+
+	//ColDeviceEnv.Insert(data)
 
 	// if imei not found
 	if err != nil {

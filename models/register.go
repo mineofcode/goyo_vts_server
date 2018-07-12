@@ -65,7 +65,7 @@ func RegisterUser(user datamodel.User) (response utils.Response, err error) {
 		return response, nil
 	}
 
-	user.ID = GetNextSequenceWitS(_sn, "uid", 5000000)
+	user.ID = GetNextSequenceWitS(_sn, SEQUserID, 5000000)
 	user.OTP = utils.GenerateOtp()
 	expireOtpInMin := 5
 	user.Active = false

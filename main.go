@@ -4,6 +4,7 @@ import (
 	"strconv"
 
 	"goyo.in/gpstracker/const"
+	"goyo.in/gpstracker/datashare"
 	"goyo.in/gpstracker/tile"
 
 	"goyo.in/gpstracker/models"
@@ -38,6 +39,7 @@ func startAll() {
 	}()
 
 	models.Init()
+	datashare.Init()
 
 	en := network.TCPServer_new{Host: consts.TCPHost, Port: strconv.Itoa(consts.TCPPort), Timeout: 3000}
 	en.StartServer()

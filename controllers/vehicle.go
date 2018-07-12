@@ -43,6 +43,9 @@ func (o *VehicleController) Post() {
 		if response.Alwspeed != 0 {
 			protocalHandler.UpdateAllowSpeed(response.Alwspeed, ip)
 		}
+		if response.Clients != nil {
+			protocalHandler.UpdatePushClient(response.Clients, ip)
+		}
 	}
 
 	o.Data["json"] = utils.CreateWrap("200", result)
@@ -60,11 +63,18 @@ func (o *VehicleController) ActivateVehicle() {
 	var ob map[string]interface{}
 	json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
 
-	var response vhmod
+	var response datamodel.Vehicles
 
 	_ = json.Unmarshal(o.Ctx.Input.RequestBody, &response)
-	actres := models.ActivateVehicleData(ob, response.Vhid)
-
+	actres, ip := models.ActivateVehicleData(ob, response.Vhid)
+	if ip != "" {
+		if response.Alwspeed != 0 {
+			protocalHandler.UpdateAllowSpeed(response.Alwspeed, ip)
+		}
+		if response.Clients != nil {
+			protocalHandler.UpdatePushClient(response.Clients, ip)
+		}
+	}
 	o.Data["json"] = utils.CreateWrap("200", actres)
 
 	o.ServeJSON()
@@ -91,6 +101,22 @@ func (o *VehicleController) GetVehicleByUID() {
 
 	_ = json.Unmarshal(o.Ctx.Input.RequestBody, &response)
 	actres, _ := models.GetVehicleByUID(response.UID)
+
+	o.Data["json"] = utils.CreateWrap("200", actres)
+
+	o.ServeJSON()
+}
+
+// Get Vehicle By User ID
+
+func (o *VehicleController) GetVehicleDetails() {
+	o.Ctx.ResponseWriter.Header().Add("Access-Control-Allow-Origin", "*")
+	o.Ctx.ResponseWriter.Header().Add("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	o.Ctx.ResponseWriter.Header().Add("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept")
+
+	var ob map[string]interface{}
+	json.Unmarshal(o.Ctx.Input.RequestBody, &ob)
+	actres, _ := models.GetVehicleByID(ob)
 
 	o.Data["json"] = utils.CreateWrap("200", actres)
 

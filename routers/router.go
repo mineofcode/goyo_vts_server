@@ -77,6 +77,7 @@ func init() {
 				&controllers.VehicleController{},
 			),
 			beego.NSRouter("/getVehicleByUID", &controllers.VehicleController{}, "post:GetVehicleByUID"),
+			beego.NSRouter("/getVehicleDetails", &controllers.VehicleController{}, "post:GetVehicleDetails"),
 		),
 
 		beego.NSNamespace("/tripapi/getOverSpeedCount",
@@ -96,6 +97,11 @@ func init() {
 		beego.NSNamespace("/tripapi/mom",
 			beego.NSRouter("/save", &controllers.MoMController{}, "post:Save"),
 			beego.NSRouter("/get", &controllers.MoMController{}, "post:Get"),
+		),
+		beego.NSNamespace("/tripapi/fuel",
+			beego.NSRouter("/add", &controllers.FuelController{}, "post:Add"),
+			beego.NSRouter("/get", &controllers.FuelController{}, "post:Get"),
+			beego.NSRouter("/get/edit", &controllers.FuelController{}, "post:GetEdit"),
 		),
 	))
 

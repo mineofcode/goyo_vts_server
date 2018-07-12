@@ -55,7 +55,7 @@ func VerifyLogin(user Login) (result utils.Response, err error) {
 		response.StausCode = 3
 	} else {
 		//update session in main table
-		sessionid = GetNextSequence(_sn, "session")
+		sessionid = GetNextSequence(_sn, SEQSessionID)
 		response.Message = "Login Successfully"
 		response.Status = true
 		response.StausCode = 1

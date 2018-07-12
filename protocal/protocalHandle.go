@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"goyo.in/gpstracker/datashare"
+
 	"gopkg.in/mgo.v2/bson"
 	"goyo.in/gpstracker/crc16"
 	"goyo.in/gpstracker/fcm"
@@ -20,28 +22,17 @@ import (
 	//"github.com/jasonlvhit/gocron"
 )
 
-//Clients keep ip address in map key
-
-// var Clients_Imei = make(map[string]clientsMod_Imei)
-// var locker_Imei sync.Mutex
-
-// //for imei based client
-// type clientsMod_Imei struct {
-// 	con       net.Conn
-// 	imei      string
-// 	lstm      time.Time
-// 	geofences []interface{}
-// }
-
 //Start the Function
 
 //Terminal connection persists
-func addClient(conn net.Conn, client string, allwspd int) shared.ClientsMod {
+func addClient(conn net.Conn, client string, allwspd int, vtsid int,
+	PushClients []string, LLoc []float64, LAC int, LACC int, LTime time.Time) shared.ClientsMod {
 	shared.Locker.Lock()
 	defer shared.Locker.Unlock()
 	ipaddress := conn.RemoteAddr().String()
 	fmt.Println("Client Added  ", ipaddress)
-	shared.Clients[ipaddress] = shared.ClientsMod{Con: conn, Imei: client, Lstm: time.Now(), Allwspd: allwspd}
+	shared.Clients[ipaddress] = shared.ClientsMod{Con: conn, Imei: client, Lstm: LTime,
+		Allwspd: allwspd, VtsID: vtsid, PClients: PushClients, Loc: LLoc, AC: LAC, Acc: LACC}
 	return shared.Clients[ipaddress]
 }
 
@@ -66,14 +57,22 @@ func UpdateAllowSpeed(speed int, ip string) {
 		_clientsMod.Allwspd = speed
 		shared.Clients[ip] = _clientsMod
 	}
+}
+
+func UpdatePushClient(party []string, ip string) {
+	shared.Locker.Lock()
+	defer shared.Locker.Unlock()
+	_clientsMod := shared.Clients[ip]
+	if _clientsMod.Imei != "" {
+		_clientsMod.PClients = party
+		shared.Clients[ip] = _clientsMod
+	}
 
 }
 
 //ParseData Parse recceived data
 func ParseData(_data []byte, lendata int, connection net.Conn) {
-
 	//fmt.Printf("%02x\n", bytes.Trim(_data, "\x00"))
-
 	//Concox Device
 	//Check for valid command
 	if !(_data[0] == 0x78 || _data[0] == 0x79) {
@@ -125,7 +124,7 @@ func registerDevice(_data []byte, lendata int, connection net.Conn) {
 	serial := _data[12:14]                           //get crc from data
 	_crxCRC := append([]byte{0x05, 0x01}, serial...) // create crc string
 	_crxCRCF := crc16.GetCrc16(_crxCRC)              // get computed crc in variable
-	fmt.Printf("%02X\n", _crxCRCF)
+	//fmt.Printf("%02X\n", _crxCRCF)
 	_crxCRCF = append(serial, _crxCRCF...) // append final crc and reply data
 	reply = append(reply, _crxCRCF...)     // append final crc and reply data
 	reply = append(reply, 0x0D, 0x0A)      //EOF
@@ -136,7 +135,7 @@ func registerDevice(_data []byte, lendata int, connection net.Conn) {
 	connection.Write(reply)
 	spd := models.GetVehiclesData(_imei)
 
-	addClient(connection, _imei, spd.AllowSpd)
+	addClient(connection, _imei, spd.AllowSpd, spd.VtsID, spd.PClients, spd.Loc, spd.AC, spd.ACC, spd.SerTm)
 
 	_d := bson.M{
 		"acttm": time.Now(),
@@ -158,7 +157,6 @@ func heartBeat(_data []byte, lendata int, connection net.Conn) {
 	if _clnt.Imei == "" {
 		return
 	}
-	_clnt.Lstm = time.Now()
 
 	reply := []byte{0x78, 0x78, 0x05, 0x13} //assign reply variable
 	serial := _data[7:9]                    //get crc from data
@@ -195,6 +193,10 @@ func heartBeat(_data []byte, lendata int, connection net.Conn) {
 	data.Acc, _ = strconv.Atoi(_prd[6:7])  //1: ACC high,0: ACC Low
 	data.Df, _ = strconv.Atoi(_prd[7:8])   //1: Defense Activated,0: Defense Deactivated
 
+	//
+	_clnt.Lstm = data.Sertm
+	_clnt.Acc = data.Acc
+
 	if data.Chrg == 1 {
 		data.Btrst = "CHRG"
 	}
@@ -207,6 +209,9 @@ func heartBeat(_data []byte, lendata int, connection net.Conn) {
 	// socket.BroadcastTo(_clnt.imei, "msgd", a)
 	connection.Write(reply)
 
+	//send tp 3rd party client
+	datashare.SendToClient(_clnt)
+
 }
 
 //getting heart beat
@@ -216,8 +221,6 @@ func locationDt(_data []byte, lendata int, connection net.Conn) {
 	if _clnt.Imei == "" {
 		return
 	}
-	_clnt.Lstm = time.Now()
-
 	_dt := "20" + fmt.Sprintf("%d-%d-%d %d:%d:%d", _data[4], _data[5], _data[6], _data[7], _data[8], _data[9]) //conver to Date
 	//fmt.Println(_dt)
 	crs := fmt.Sprintf("%x", _data[10:11])            //Quantity of GPS	information	satellites
@@ -250,6 +253,9 @@ func locationDt(_data []byte, lendata int, connection net.Conn) {
 		"speed":    _data[19],
 		"vhid":     _clnt.Imei}
 
+	_clnt.Lstm = time.Now()
+	_clnt.Loc = point
+
 	if _clnt.Allwspd > 0 {
 
 		crspeed := int(_data[19])
@@ -269,9 +275,8 @@ func locationDt(_data []byte, lendata int, connection net.Conn) {
 	models.UpdateData(data, _clnt.Imei, "loc", nil)
 	checkGeofence(point, _data[19], _clnt.Imei)
 
-	//fmt.Println(fmt.Sprintf("%x", reply))
-	//send reply to terminal
-	//connection.Write(reply)
+	//send tp 3rd party client
+	datashare.SendToClient(_clnt)
 }
 
 // send points to check for geofence
@@ -304,7 +309,6 @@ func almDecode04(_data []byte, lendata int, connection net.Conn) {
 	// alm3 := arrcmt[2] // ALM3;
 
 	//
-
 	DYDVAL := strings.SplitN(arrcmt[4], "=", -1)
 	src := []byte(DYDVAL[1])
 	dst := make([]byte, hex.DecodedLen(len(src)))
@@ -343,7 +347,7 @@ func almDecode05(_data []byte, lendata int, connection net.Conn) {
 	if _clnt.Imei == "" {
 		return
 	}
-	_clnt.Lstm = time.Now()
+
 	_prd := fmt.Sprintf("%08b", _data[6:7])
 	_prd = _prd[1 : len(_prd)-1]
 	// println(_prd[7:8])
@@ -355,6 +359,8 @@ func almDecode05(_data []byte, lendata int, connection net.Conn) {
 		"val":   val,
 		"actvt": "evt",
 	}
+	_clnt.AC = val
+	_clnt.Lstm = time.Now()
 
 	data := bson.M{
 		"sertm": time.Now(),

@@ -51,7 +51,13 @@ func UpdateData(d interface{}, vhid string, f string, otherdata interface{}) (er
 	if dberr := c.Update(bson.M{"vhid": vhid}, bson.M{"$set": d}); dberr != nil {
 		fmt.Println(dberr)
 		if dberr.Error() == "not found" {
-			_, err = c.UpsertId(bson.M{"vhid": vhid}, bson.M{"$set": d})
+			if f == "reg" {
+
+				R := d.(bson.M)
+				R["vtsid"] = GetNextSequence(_sn, SEQVehicleID)
+				d = R
+			}
+			_, err = c.Upsert(bson.M{"vhid": vhid}, bson.M{"$set": d})
 			if err != nil {
 				fmt.Println(err)
 			}

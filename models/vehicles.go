@@ -92,11 +92,12 @@ func GetStoredHistory(vhid string, histm string, _sn *mgo.Session) (result datam
 // Get Vehicle By User ID
 
 type GetVehicelListByUID struct {
-	UID   string      `bson:"uid" json:"uid"`
-	VtsId int         `bson:"vtsid" json:"vtsid"`
-	Vhid  string      `bson:"vhid" json:"vhid"`
-	VhNm  string      `bson:"vhname" json:"vhname"`
-	Vhd   interface{} `bson:"vhd" json:"vhd"`
+	UID    string      `bson:"uid" json:"uid"`
+	VtsId  int         `bson:"vtsid" json:"vtsid"`
+	Vhid   string      `bson:"vhid" json:"vhid"`
+	VhNm   string      `bson:"vhname" json:"vno"`
+	VhIcon string      `bson:"vhtyp" json:"ico"`
+	Vhd    interface{} `bson:"vhd" json:"vhd"`
 }
 
 func GetVehicleByUID(uid string) (result []GetVehicelListByUID, err error) {
@@ -115,17 +116,33 @@ func GetVehicleByUID(uid string) (result []GetVehicelListByUID, err error) {
 	return dR, err
 }
 
+func GetVehicleByID(params map[string]interface{}) (result datamodel.Vehicles, err error) {
+	_sn := getDBSession().Copy()
+	defer _sn.Close()
+
+	c := col(_sn, db.ColVhcls)
+
+	if err != nil {
+		fmt.Println("error")
+	}
+
+	var dR datamodel.Vehicles
+
+	err = c.Find(bson.M{"vtsid": params["vtsid"]}).One(&dR)
+	return dR, err
+}
+
 // Activate Vehicle Data
 
-func ActivateVehicleData(d map[string]interface{}, vhid string) utils.Response {
+func ActivateVehicleData(d map[string]interface{}, vhid string) (utils.Response, string) {
 	_sn := getDBSession().Copy()
 	defer _sn.Close()
 	var err error
 
 	resp := CheckDeviceActivate(vhid)
 
-	if !resp.Status {
-		return resp
+	if !resp.Status && d["vtsid"] == 0 {
+		return resp, ""
 	}
 
 	c := col(_sn, db.ColVhcls)
@@ -135,28 +152,34 @@ func ActivateVehicleData(d map[string]interface{}, vhid string) utils.Response {
 		resp.Status = false
 
 		if dberr.Error() == "not found" {
-			d["vtsid"] = GetNextSequence(_sn, "vehicleid")
+			d["vtsid"] = GetNextSequence(_sn, SEQVehicleID)
 			fmt.Println(d)
 			err = c.Insert(d)
 
 			if err != nil {
 				resp.Error = err.Error()
 				resp.Status = false
-				return resp
+				return resp, ""
 			}
 
-			resp.Message = "Activated Successfully"
+			resp.Message = "Added Successfully"
 			resp.Status = true
 		}
 	} else {
+		var vh Vhdata
+
+		c.Find(bson.M{"vhid": vhid}).One(&vh)
+
 		resp.Message = "Updated Successfully"
 		resp.Status = true
+
+		return resp, vh.Ip
 	}
 
 	// var vh ActiVateResult
 	// c.Find(bson.M{"vhid": vhid}).One(&vh)
 
-	return resp
+	return resp, ""
 }
 
 //update Insert vehicledata
@@ -174,7 +197,7 @@ func UpdateVehicleData(d map[string]interface{}, vhid interface{}) (result strin
 		result = dberr.Error()
 
 		if dberr.Error() == "not found" {
-			d["vtsid"] = GetNextSequence(_sn, "vehicleid")
+			d["vtsid"] = GetNextSequence(_sn, SEQVehicleID)
 
 			fmt.Println(d)
 			err = c.Insert(d)
@@ -218,6 +241,12 @@ type VhLoginData struct {
 	AllowSpd int       `bson:"alwspeed"`
 	VhNm     string    `bson:"vhname"`
 	LstSpdtm time.Time `bson:"lstspdtm"`
+	VtsID    int       `bson:"vtsid"`
+	PClients []string  `bson:"pushcl"`
+	AC       int       `bson:"D1"`
+	ACC      int       `bson:"acc"`
+	SerTm    time.Time `bson:"sertm"`
+	Loc      []float64 `bson:"loc"`
 }
 
 func GetVehiclesData(vhid string) VhLoginData {

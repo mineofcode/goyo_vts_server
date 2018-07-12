@@ -33,12 +33,16 @@ type (
 		Acc      int         `bson:"acc" json:"acc"`
 		Gsmsig   int         `bson:"gsmsig" json:"gsmsig"`
 		Histdate time.Time   `bson:"histtm" json:"-"`
-		VhNm     string      `bson:"vhname" json:"vhname"`
+		VhNm     string      `bson:"vhname" json:"vno"`
 		Vhd      interface{} `bson:"vhd" json:"vhd"`
+		Extra    interface{} `bson:"extra" json:"extra"`
+		Vhtyp    string      `bson:"vhtyp" json:"ico"`
 		Ipadr    string      `bson:"ip" json:"-"`
 		IsSpd    bool        `bson:"isp" json:"-"`
 		LstSpd   int         `bson:"lstspd" json:"lstspd"`
 		LstSpdtm time.Time   `bson:"lstspdtm" json:"lstspdtm"`
 		D1       int         `bson:"d1" json:"d1"`
+		Sim      string      `bson:"sim" json:"sim"`
+		Clients  []string    `bson:"pushcl" json:"pushcl"`
 	}
 )

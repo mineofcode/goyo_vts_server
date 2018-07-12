@@ -25,4 +25,6 @@ const (
 	ColSimEnv = "siminv"
 	//ColMoM 'mom' Collection
 	ColMoM = "mom"
+	//ColMoM 'fuel' Collection
+	ColFuelEntry = "fuel"
 )

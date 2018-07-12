@@ -45,7 +45,7 @@ func commandWrapper(client net.Conn, msg datamodel.DeviceCommands) {
 	//add serial number
 	serial := getCurrentSerial()
 
-	fmt.Println(serial)
+	//	fmt.Println(serial)
 	cmd = append(cmd, serial...) ///////Content of command
 	//end serial number
 	//------------------------------------------------------
@@ -87,7 +87,7 @@ func getCurrentSerial() []byte {
 	}
 	// binary. (bs, uint32(currentSerial))
 	//fmt.Println([]byte(fmt.Sprintf("%2d", currentSerial)))
-	fmt.Println(dst)
+	//	fmt.Println(dst)
 	return dst[:n]
 }
 
@@ -101,8 +101,6 @@ func getServerBit(serverbit uint) []byte {
 	if err != nil {
 		log.Fatal(err)
 	}
-	// binary. (bs, uint32(currentSerial))
-	//fmt.Println([]byte(fmt.Sprintf("%2d", currentSerial)))
-	fmt.Println(dst)
+	//fmt.Println(dst)
 	return dst[:n]
 }

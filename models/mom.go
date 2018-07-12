@@ -8,9 +8,10 @@ import (
 
 type (
 	STRUCTMom struct {
-		Value  string      `json:"value"`
-		Valued interface{} `json:"valued"`
-		Active bool        `json:"active"`
+		ID     bson.ObjectId `json:"id" bson:"_id,omitempty"`
+		Value  string        `json:"value"`
+		Valued interface{}   `json:"valued"`
+		Active bool          `json:"active"`
 	}
 )
 
