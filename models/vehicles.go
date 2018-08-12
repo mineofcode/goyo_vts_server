@@ -259,3 +259,26 @@ func GetVehiclesData(vhid string) VhLoginData {
 	_ = c.Find(bson.M{"vhid": vhid}).One(&dResult1)
 	return dResult1
 }
+
+type VehicleData struct {
+	VhId   string    `bson:"vhid"`
+	Loc    []float64 `bson:"loc"`
+	VhName string    `bson:"vhname"`
+}
+
+func GetNearByVehicles(d map[string]interface{}) utils.Response {
+
+	var res utils.Response
+
+	_sn := getDBSession().Copy()
+	defer _sn.Close()
+
+	c := col(_sn, db.ColVhcls)
+	var vh []VehicleData
+
+	c.Find(bson.M{"loc": bson.M{"$near": d["point"]}}).All(&vh)
+
+	res.Data = vh
+
+	return res
+}

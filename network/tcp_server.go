@@ -122,7 +122,7 @@ func (s *server) Listen() {
 
 // Creates new tcp server instance
 func NewTCP(address string) *server {
-	log.Println("Creating server with address", address)
+	log.Println("Starting TCP server with address", address)
 	server := &server{
 		address: address,
 	}

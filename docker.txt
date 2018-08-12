@@ -3,7 +3,14 @@ sudo docker stop
 sudo docker images
 sudo docker rmi 
 sudo docker build -t gpst .
-sudo docker run --net="host" -p 6969:6969 -p 6979:6979 -p 27017:27017 --restart unless-stopped  -t --name gpst gpst
+sudo docker container ls --all
+sudo docker rm
+
+dependency
+-- sudo docker run --net="host" -p 9851:9851 -t --rm --name tile38 tile38
+
+
+sudo docker run --net="host" -p 6969:6969 -p 6979:6979 -p 27017:27017 --restart unless-stopped -t --name gpst gpst
 
 --sudo docker run --net="host" -p 6969:6969 -p 6979:6979 -p 27017:27017 -t --rm --name oldimg oldimg
 

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
-	"net/http"
 	"strings"
 
 	"goyo.in/gpstracker/datamodel"
@@ -12,7 +11,6 @@ import (
 
 	"github.com/astaxie/beego"
 	"github.com/googollee/go-socket.io"
-	"github.com/rs/cors"
 	"gopkg.in/mgo.v2/bson"
 	"goyo.in/gpstracker/models"
 	"goyo.in/gpstracker/shared"
@@ -85,14 +83,14 @@ func start() {
 
 	shared.Socket = server
 
-	mux := http.NewServeMux()
-	mux.Handle("/socket.io/", server)
+	// mux := http.NewServeMux()
+	// mux.Handle("/socket.io/", server)
 
-	crs := cors.AllowAll()
-	handler := crs.Handler(mux)
-	beego.Handler("/socket.io/", handler)
+	// crs := cors.AllowAll()
+	// handler := crs.Handler(mux)
+	beego.Handler("/socket.io/", server)
 	//http.Handle("/", http.FileServer(http.Dir("./asset")))
-	log.Println("Serving at localhost:5658...")
+	// log.Println("Serving at localhost:5658...")
 	//http.ListenAndServe(":5658", handler)
 }
 

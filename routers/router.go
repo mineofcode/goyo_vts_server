@@ -2,6 +2,8 @@ package routers
 
 import (
 	"github.com/astaxie/beego"
+	"github.com/astaxie/beego/plugins/cors"
+
 	"goyo.in/gpstracker/controllers"
 	ctrl "goyo.in/gpstracker/webapp/controllers"
 )
@@ -12,7 +14,9 @@ func init() {
 	var namespaces []string = []string{"goyoapi", "another"}
 
 	//
-
+	beego.NSNamespace("/",
+		beego.NSRouter("/socket.io", &controllers.SocketController{}, "get:Teset"),
+	)
 	beego.AddNamespace(beego.NewNamespace("/"+namespaces[0],
 		beego.NSNamespace("/tripapi/user",
 			beego.NSRouter("/login", &controllers.LoginController{}, "post:Login"),
@@ -103,6 +107,12 @@ func init() {
 			beego.NSRouter("/get", &controllers.FuelController{}, "post:Get"),
 			beego.NSRouter("/get/edit", &controllers.FuelController{}, "post:GetEdit"),
 		),
+
+		// beego.NSNamespace("/tripapi/locations",
+		// 	beego.NSInclude(
+		// 		&controllers.VehicleController{},
+		// 	),
+
 	))
 
 	//OverSpeed
@@ -112,4 +122,12 @@ func init() {
 	//tripapi/deleteGeoFence
 	beego.Router("/hello-world", &ctrl.MainController{})
 	beego.Router("view/device:imei", &ctrl.DeviceController{})
+
+	beego.InsertFilter("*", beego.BeforeRouter, cors.Allow(&cors.Options{
+		AllowAllOrigins:  true,
+		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Authorization", "Access-Control-Allow-Origin", "Content-Type"},
+		ExposeHeaders:    []string{"Content-Length", "Access-Control-Allow-Origin"},
+		AllowCredentials: true,
+	}))
 }
