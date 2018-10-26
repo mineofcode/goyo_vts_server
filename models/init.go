@@ -30,7 +30,7 @@ func Init() {
 	}
 	err := ColUsers.EnsureIndex(index)
 	if err != nil {
-		panic(err)
+		//	panic(err)
 	}
 
 	//indexing for devinv
@@ -44,7 +44,7 @@ func Init() {
 	}
 	err = ColDeviceEnv.EnsureIndex(index)
 	if err != nil {
-		panic(err)
+		// panic(err)
 	}
 
 	//indexing for devinv
@@ -59,7 +59,19 @@ func Init() {
 
 	err = ColSimEnv.EnsureIndex(index)
 	if err != nil {
-		panic(err)
+		// panic(err)
+	}
+
+	//indexing for devinv
+	ColVhcls := col(_sn, db.ColVhcls)
+	index = mgo.Index{
+		Key:  []string{"$2d:loc"},
+		Bits: 26,
+	}
+
+	err = ColVhcls.EnsureIndex(index)
+	if err != nil {
+		// panic(err)
 	}
 
 }

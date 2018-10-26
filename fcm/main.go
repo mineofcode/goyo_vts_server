@@ -37,7 +37,35 @@ func SendSpeedAlertTotopic(imei string, speed int) {
 		"title": NP.Title,
 		"body":  NP.Body,
 	}
-	sendNotification(topic, data, NP, 60000)
+	sendNotification(topic, data, NP, (60 * 5))
+}
+
+//SendACCAlertTotopic send fcm message to topic
+func SendACCAlertTotopic(imei string, acc int) {
+	topic := fmt.Sprintf("/topics/acc_%s", imei)
+	//
+	vhdet := models.GetVehiclesData(imei)
+
+	_ACC := "off"
+	if acc == 1 {
+		_ACC = "on"
+	} else {
+		_ACC = "off"
+	}
+
+	var NP fcm.NotificationPayload
+	NP.Title = fmt.Sprintf("Ignation : %s", vhdet.VhNm)
+	NP.Body = fmt.Sprintf("Ingnation is %s ", _ACC)
+	NP.Sound = "default"
+
+	data := map[string]string{
+		"vhid":  imei,
+		"acc":   _ACC,
+		"topic": "acc",
+		"title": NP.Title,
+		"body":  NP.Body,
+	}
+	sendNotification(topic, data, NP, (60 * 5))
 }
 
 //SendSpeedAlertTotopic send fcm message to topic

@@ -240,6 +240,7 @@ func GetVehicleIP(vhid interface{}) (ipaddr string) {
 type VhLoginData struct {
 	AllowSpd int       `bson:"alwspeed"`
 	VhNm     string    `bson:"vhname"`
+	VhId     string    `bson:"vhid"`
 	LstSpdtm time.Time `bson:"lstspdtm"`
 	VtsID    int       `bson:"vtsid"`
 	PClients []string  `bson:"pushcl"`
@@ -247,6 +248,7 @@ type VhLoginData struct {
 	ACC      int       `bson:"acc"`
 	SerTm    time.Time `bson:"sertm"`
 	Loc      []float64 `bson:"loc"`
+	Block    bool      `bson:"block"`
 }
 
 func GetVehiclesData(vhid string) VhLoginData {
@@ -269,15 +271,16 @@ type VehicleData struct {
 func GetNearByVehicles(d map[string]interface{}) utils.Response {
 
 	var res utils.Response
+	res.Extra = d["radious"]
 
 	_sn := getDBSession().Copy()
 	defer _sn.Close()
 
 	c := col(_sn, db.ColVhcls)
 	var vh []VehicleData
+	fmt.Println(bson.M{"loc": bson.M{"$near": d["point"], "$maxDistance": d["radious"]}})
 
-	c.Find(bson.M{"loc": bson.M{"$near": d["point"]}}).All(&vh)
-
+	c.Find(bson.M{"loc": bson.M{"$near": d["point"], "$maxDistance": d["radious"]}}).All(&vh)
 	res.Data = vh
 
 	return res

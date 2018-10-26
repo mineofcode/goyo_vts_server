@@ -44,7 +44,7 @@ func CreateGeoFence(params datamodel.GeoFenceModelAr) (result []datamodel.GeoFen
 			resp.Status = true
 			resp.Msg = "Geofence Updated Successfully"
 			//	return resp, nil
-			setWebhook(param.FenceName, param.Imei, param.Points[0], param.Points[1], param.Radius, param.Active, tile38con)
+			setWebhook(param.FenceName, param.Imei, param.FenceTime, param.Points[0], param.Points[1], param.Radius, param.Active, tile38con)
 		} else if info.Matched > 0 {
 			resp.Status = false
 			resp.Msg = "No Changes"
@@ -52,7 +52,7 @@ func CreateGeoFence(params datamodel.GeoFenceModelAr) (result []datamodel.GeoFen
 		} else if info.UpsertedId != nil {
 			resp.Status = true
 			resp.Msg = "Geofence Created Successfully"
-			setWebhook(param.FenceName, param.Imei, param.Points[0], param.Points[1], param.Radius, true, tile38con)
+			setWebhook(param.FenceName, param.Imei, param.FenceTime, param.Points[0], param.Points[1], param.Radius, true, tile38con)
 			//return resp, nil
 		}
 
@@ -63,7 +63,7 @@ func CreateGeoFence(params datamodel.GeoFenceModelAr) (result []datamodel.GeoFen
 
 }
 
-func setWebhook(id string, imei string, lat float64, lon float64, radious int, isins bool, con *client.Conn) string {
+func setWebhook(id string, imei string, time string, lat float64, lon float64, radious int, isins bool, con *client.Conn) string {
 
 	whokid := strings.Join([]string{imei, id}, ksep)
 	//whokid = "ttst"
@@ -73,10 +73,11 @@ func setWebhook(id string, imei string, lat float64, lon float64, radious int, i
 		hookCmd = fmt.Sprintf("DELHOOK %s",
 			whokid)
 	} else {
-
-		hookCmd = fmt.Sprintf("SETHOOK %s grpc://%s NEARBY %s FENCE DETECT enter,exit POINT %f %f %v",
+		fmt.Println(time)
+		hookCmd = fmt.Sprintf("SETHOOK %s grpc://%s META time %s NEARBY %s FENCE DETECT enter,exit POINT %f %f %v",
 			whokid,
 			opts.DefaultOpts.WebScok.Addr,
+			time,
 			imei,
 			lat, lon, radious)
 	}
@@ -247,4 +248,29 @@ func DeleteGeoFence_RED(params datamodel.GetGeoFenceParams) (result interface{},
 	// }
 
 	return "Successfully deleted", nil
+}
+
+func SyncGeoFence(params interface{}) (result interface{}, err error) {
+
+	_sn := getDBSession().Copy()
+	defer _sn.Close()
+
+	tile38con, err := db.Pool.Get()
+	if err != nil {
+		log.WithFields(log.F("func", "Factory.AnalysisLoop.til38Pool.Get")).Fatal(err)
+	}
+	defer tile38con.Close()
+	//fmt.Println(vhid, d)
+
+	c := col(_sn, db.ColGeofence)
+	var datamodel []datamodel.GeoFenceModel
+	c.Find(params).All(&datamodel)
+
+	fmt.Println(datamodel)
+
+	for _, param := range datamodel {
+		setWebhook(param.FenceName, param.Imei, param.FenceTime, param.Points[0], param.Points[1], param.Radius, param.Active, tile38con)
+	}
+
+	return len(datamodel), nil
 }

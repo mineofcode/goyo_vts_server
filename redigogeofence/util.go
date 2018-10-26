@@ -16,8 +16,13 @@ import (
 	"goyo.in/gpstracker/models"
 )
 
-func CallService(params datamodel.GeofenceDetect) {
+// type Req struct {
+// 	Req interface{} `bson:"req" json:"req"`
+// 	Res interface{} `bson:"res" json:"res"`
+// }
 
+func CallService(params datamodel.GeofenceDetect) {
+	// rq := Req{}
 	var hookin = strings.Index(params.Hook, ":") + 1
 
 	var skey = params.Hook[hookin:len(params.Hook)]
@@ -27,9 +32,9 @@ func CallService(params datamodel.GeofenceDetect) {
 		"fncnm": skey,
 	})
 
-	isCallurl := false //callable url assign
-	//check time to send notification if time is available
-	fmt.Println(data.FenceTime)
+	isCallurl := true //callable url assign
+	// check time to send notification if time is available
+	// fmt.Println(data.FenceTime)
 	if data.FenceTime != "" { // if fence time is present then process time else anytime allow
 
 		res := []datamodel.FenceTime{}                      // create varible
@@ -78,8 +83,10 @@ func CallService(params datamodel.GeofenceDetect) {
 			}
 		}
 	}
-
+	// rq.Req = data
 	if !isCallurl {
+		// InserLog(rq)
+		// rq.Res = "Time Not Match"
 		return
 	}
 
@@ -102,10 +109,12 @@ func CallService(params datamodel.GeofenceDetect) {
 		urlenc,
 	)
 
-	fmt.Println(urls)
+	// fmt.Println(urls)
 	req, err := http.NewRequest("GET", urls, nil)
 	if err != nil {
+		// rq.Res = err.Error()
 		log.Fatal("NewRequest: ", err)
+		// InserLog(rq)
 		return
 	}
 
@@ -120,7 +129,9 @@ func CallService(params datamodel.GeofenceDetect) {
 	// returns an HTTP response
 	resp, err := client.Do(req)
 	if err != nil {
+		// rq.Res = err.Error()
 		log.Fatal("Do: ", err)
+		//	InserLog(rq)
 		return
 	}
 
@@ -137,11 +148,18 @@ func CallService(params datamodel.GeofenceDetect) {
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
+		// rq.Res = err.Error()
 		fmt.Println(err)
+		//	InserLog(rq)
 	} else {
-		fmt.Println(body)
+		// rq.Res = body
+		fmt.Println("geopoint", string(body))
 	}
 
+}
+
+func InserLog(d interface{}) {
+	// go models.CreateGeoFenceLog(d)
 }
 
 // UrlEncoded encodes a string like Javascript's encodeURIComponent()

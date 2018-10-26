@@ -5,13 +5,8 @@ import (
 	"net"
 	"sync/atomic"
 
-	"goyo.in/gpstracker/datamodel"
-	"goyo.in/gpstracker/redigogeofence"
-
 	"github.com/go-playground/log"
 	pb "goyo.in/gpstracker/hservice"
-
-	"encoding/json"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
@@ -23,12 +18,25 @@ type server struct {
 
 func (s *server) Send(ctx context.Context, in *pb.MessageRequest) (*pb.MessageReply, error) {
 	atomic.AddInt64(&s.sCnt, 1)
+	// fmt.Println(in)
+	// data := datamodel.GeofenceDetect{}
+	// res := []datamodel.FenceTime{} // create varible
 
-	data := datamodel.GeofenceDetect{}
-	json.Unmarshal([]byte(in.Value), &data)
+	// json.Unmarshal([]byte(in.Value), &data)
+	// strconvs := data.Meta["time"].(string)
+
+	// fmt.Println(strconvs)
+	// err := json.Unmarshal([]byte(strconvs), &res)
+
+	// if err == nil {
+	// 	return &pb.MessageReply{Ok: true}, nil
+	// }
+	// fmt.Println(res)
+
+	// go time.Sleep(5 * time.Second)
 	//lg.Printf("Receive message %s", data.Detect)
 	//go
-	redigogeofence.CallService(data)
+	// redigogeofence.CallService(data)
 	//log.WithFields(log.F("func", "server.Send"), log.F("sCnt", s.sCnt)).Info(in.String())
 	return &pb.MessageReply{Ok: true}, nil
 }

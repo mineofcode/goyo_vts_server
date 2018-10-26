@@ -6,7 +6,6 @@ import (
 )
 
 func init() {
-
 	// namespaces
 	var namespaces []string = []string{"goyoapi", "another"}
 

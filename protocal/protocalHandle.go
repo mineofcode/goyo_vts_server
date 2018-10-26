@@ -45,8 +45,15 @@ func RemoveClient(conn net.Conn) {
 
 func getClient(conn net.Conn) (client shared.ClientsMod) {
 	ipaddress := conn.RemoteAddr().String()
-	_clientsMod := shared.Clients[ipaddress]
-	return _clientsMod
+	return shared.Clients[ipaddress]
+}
+
+func setClient(conn net.Conn, client shared.ClientsMod) {
+	shared.Locker.Lock()
+	defer shared.Locker.Unlock()
+
+	ipaddress := conn.RemoteAddr().String()
+	shared.Clients[ipaddress] = client
 }
 
 func UpdateAllowSpeed(speed int, ip string) {
@@ -76,7 +83,13 @@ func ParseData(_data []byte, lendata int, connection net.Conn) {
 	//Concox Device
 	//Check for valid command
 	if !(_data[0] == 0x78 || _data[0] == 0x79) {
-		fmt.Println("invalid command")
+
+		// if _data[0] == 0x5b && _data[len(_data)-1] == 0x5d {
+		// 	fmt.Printf("%02x\n", bytes.Trim(_data, "\x00"), " watch detected")
+		// } else {
+		fmt.Println("invalid command", _data[len(_data)-1])
+		// }
+
 	} else if _data[0] == 0x78 { //check for 78 commands
 		if _data[3] == 0x01 {
 			registerDevice(_data, lendata, connection) // Registration Response
@@ -132,8 +145,16 @@ func registerDevice(_data []byte, lendata int, connection net.Conn) {
 	_imei := fmt.Sprintf("%x", _data[4:12])[1:16] //getting imei number
 	// fmt.Println(_imei)
 	// fmt.Println(reply)
-	connection.Write(reply)
+
 	spd := models.GetVehiclesData(_imei)
+	if spd.VhId == "" {
+		fmt.Println(_imei + " is not registered")
+		return
+	} else {
+		fmt.Println(_imei + " is logged In")
+	}
+
+	connection.Write(reply)
 
 	addClient(connection, _imei, spd.AllowSpd, spd.VtsID, spd.PClients, spd.Loc, spd.AC, spd.ACC, spd.SerTm)
 
@@ -169,6 +190,7 @@ func heartBeat(_data []byte, lendata int, connection net.Conn) {
 	//Client get by ipaddress
 
 	//extract data from received data
+	fmt.Println(_data[4:5])
 	_prd := fmt.Sprintf("%08b", _data[4:5])
 	_prd = _prd[1 : len(_prd)-1]
 	btrt := "BTRY"
@@ -187,21 +209,43 @@ func heartBeat(_data []byte, lendata int, connection net.Conn) {
 		Alm:    (_prd[2:3] + _prd[3:4] + _prd[4:5]), //100: SOS,011: Low Battery Alarm,010: Power Cut Alarm,001: Shock Alarm,000: Normal
 		Gsmsig: networkper(int(_data[6])),           //0x00: no signal,0x01: extremely weak signal,0x02: very weak signal,0x03: good signal,0x04: strong signal
 	}
+
 	data.Oe, _ = strconv.Atoi(_prd[0:1])   //1: oil and electricity disconnected, 0: gas oil and electricity
 	data.Gp, _ = strconv.Atoi(_prd[1:2])   //1: GPS tracking is on,0: GPS tracking is off
 	data.Chrg, _ = strconv.Atoi(_prd[5:6]) //1: Charge On,0: Charge Off
 	data.Acc, _ = strconv.Atoi(_prd[6:7])  //1: ACC high,0: ACC Low
 	data.Df, _ = strconv.Atoi(_prd[7:8])   //1: Defense Activated,0: Defense Deactivated
-
 	//
+	// fmt.Println(data.Acc)
+
 	_clnt.Lstm = data.Sertm
+	var otherdata interface{}
 	_clnt.Acc = data.Acc
+	otherdata = bson.M{
+		"actvt":    "loc",
+		"sertm":    time.Now(),
+		"imei":     _clnt.Imei,
+		"alwspeed": _clnt.Allwspd,
+		"isp":      false,
+		"flag":     "acc",
+		"acc":      data.Acc,
+		"appvr":    "1.0",
+		"loc":      _clnt.Loc,
+		"bearing":  0,
+		"speed":    0,
+		"vhid":     _clnt.Imei,
+	}
+	if _clnt.Acc != data.Acc {
+		go fcm.SendACCAlertTotopic(_clnt.Imei, data.Acc)
+	}
 
 	if data.Chrg == 1 {
 		data.Btrst = "CHRG"
 	}
+
+	setClient(connection, _clnt)
 	//need to call mongo db
-	models.UpdateData(data, _clnt.Imei, "hrt", nil)
+	models.UpdateData(data, _clnt.Imei, "hrt", otherdata)
 	// fmt.Println(fmt.Sprintf("%x", reply))
 	//a := fmt.Sprintf("%v", data)
 	//send reply to terminal
@@ -246,6 +290,7 @@ func locationDt(_data []byte, lendata int, connection net.Conn) {
 		"isp":      false,
 		"flag":     "inprog",
 		"appvr":    "1.0",
+		"acc":      _clnt.Acc,
 		"sat":      _stlt,
 		"loc":      point,
 		"postyp":   _courus[2:3],
@@ -271,6 +316,7 @@ func locationDt(_data []byte, lendata int, connection net.Conn) {
 		}
 	}
 
+	setClient(connection, _clnt)
 	//need to call mongo db
 	models.UpdateData(data, _clnt.Imei, "loc", nil)
 	checkGeofence(point, _data[19], _clnt.Imei)
@@ -368,7 +414,7 @@ func almDecode05(_data []byte, lendata int, connection net.Conn) {
 		"vhid":  _clnt.Imei,
 		"d1":    val,
 	}
-
+	setClient(connection, _clnt)
 	models.UpdateData(data, _clnt.Imei, "d1", otherdata)
 
 }

@@ -1,5 +1,9 @@
 package datamodel
 
+import (
+	"gopkg.in/mgo.v2/bson"
+)
+
 type GeoFenceModelAr struct {
 	Data []GeoFenceModel `bson:"data" json:"data"` // imei number of device
 
@@ -18,6 +22,10 @@ type GeoFenceModel struct {
 	TimeType    string    `bson:"tmtyp" json:"tmtyp"`   // TimeType  daily|datetime|date|time
 	FenceTime   string    `bson:"time" json:"time"`     // Time to Fence
 
+}
+
+type Meta struct {
+	Time []FenceTime `json:"time"` // TimeType  daily|datetime|date|time
 }
 
 type FenceTime struct {
@@ -48,4 +56,5 @@ type GeofenceDetect struct {
 	Hook   string `json:"hook"`   // Hook
 	Detect string `json:"detect"` // detect
 	Time   string `json:"time"`
+	Meta   bson.M `json:"meta"`
 }

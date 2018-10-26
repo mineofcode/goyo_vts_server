@@ -75,6 +75,11 @@ func UpdateData(d interface{}, vhid string, f string, otherdata interface{}) (er
 		// send to socket server
 
 	} else if f == "hrt" {
+		if otherdata != nil {
+			ch := col(_sn, db.ColVhtrps)
+			err = ch.Insert(otherdata)
+		}
+
 		go SendLive(vhid, bson.M{"evt": "data", "data": d})
 
 	} else if f == "d1" {

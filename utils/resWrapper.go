@@ -19,4 +19,5 @@ type Response struct {
 	Error     string      `json:"error"`
 	StausCode int         `json:"statuscode"`
 	Data      interface{} `json:"data"`
+	Extra     interface{} `json:"extra"`
 }

@@ -1,6 +1,187 @@
 swagger: "2.0"
 info: {}
-paths: {}
+basePath: /goyoapi
+paths:
+  /tripapi/createGeoFence/:
+    post:
+      tags:
+      - tripapi/createGeoFence
+      description: login
+      operationId: CreateGeoFenceController.Create
+      parameters:
+      - in: body
+        name: body
+        description: The object content
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      responses:
+        "200":
+          description: '{login} models.Login'
+        "403":
+          description: body is empty
+  /tripapi/createHistory/:
+    post:
+      tags:
+      - tripapi/createHistory
+      description: login
+      operationId: TripHistoryDataMakerController.Create
+      parameters:
+      - in: body
+        name: body
+        description: The object content
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      responses:
+        "200":
+          description: '{login} models.Login'
+        "403":
+          description: body is empty
+  /tripapi/deleteGeoFence/:
+    post:
+      tags:
+      - tripapi/deleteGeoFence
+      description: login
+      operationId: DeletGeoFenceController.Create
+      parameters:
+      - in: body
+        name: body
+        description: The object content
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      responses:
+        "200":
+          description: '{login} models.Login'
+        "403":
+          description: body is empty
+  /tripapi/getGeoFence/:
+    post:
+      tags:
+      - tripapi/getGeoFence
+      description: login
+      operationId: GetGeoFenceController.Create
+      parameters:
+      - in: body
+        name: body
+        description: The object content
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      responses:
+        "200":
+          description: '{login} models.Login'
+        "403":
+          description: body is empty
+  /tripapi/getHistory/:
+    post:
+      tags:
+      - tripapi/getHistory
+      description: login
+      operationId: TripHistoryDataController.Create
+      parameters:
+      - in: body
+        name: body
+        description: The object content
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      responses:
+        "200":
+          description: '{login} models.Login'
+        "403":
+          description: body is empty
+  /tripapi/getOverSpeedCount/:
+    post:
+      tags:
+      - tripapi/getOverSpeedCount
+      description: login
+      operationId: OverSpeedCountController.Create
+      parameters:
+      - in: body
+        name: body
+        description: The object content
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      responses:
+        "200":
+          description: '{login} models.Login'
+        "403":
+          description: body is empty
+  /tripapi/getvahicleupdates/:
+    post:
+      tags:
+      - tripapi/getvahicleupdates
+      description: login
+      operationId: TripDataController.Create
+      parameters:
+      - in: body
+        name: body
+        description: The object content
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      responses:
+        "200":
+          description: '{login} models.Login'
+        "403":
+          description: body is empty
+  /tripapi/getvahicleupdates/{username}/{passwd}:
+    get:
+      tags:
+      - tripapi/getvahicleupdates
+      description: login
+      operationId: TripDataController.Create
+      parameters:
+      - in: body
+        name: body
+        description: The object content
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      responses:
+        "200":
+          description: '{login} models.Login'
+        "403":
+          description: body is empty
+  /tripapi/report/:
+    post:
+      tags:
+      - tripapi/report
+      description: login
+      operationId: ReportController.Create
+      parameters:
+      - in: body
+        name: body
+        description: The object content
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      responses:
+        "200":
+          description: '{login} models.Login'
+        "403":
+          description: body is empty
+  /tripapi/syncGeoFence/:
+    post:
+      tags:
+      - tripapi/syncGeoFence
+      description: login
+      operationId: SyncGeoFenceController.Create
+      parameters:
+      - in: body
+        name: body
+        description: The object content
+        required: true
+        schema:
+          $ref: '#/definitions/models.Login'
+      responses:
+        "200":
+          description: '{login} models.Login'
+        "403":
+          description: body is empty
 definitions:
   models.Login:
     title: Login
@@ -12,3 +193,31 @@ definitions:
         type: string
       src:
         type: string
+tags:
+- name: tripapi/getvahicleupdates
+  description: |
+    Operations about login
+- name: tripapi/getHistory
+  description: |
+    Operations about login
+- name: tripapi/createHistory
+  description: |
+    Operations about login
+- name: tripapi/report
+  description: |
+    Operations about login
+- name: tripapi/createGeoFence
+  description: |
+    Operations about login
+- name: tripapi/getGeoFence
+  description: |
+    Operations about login
+- name: tripapi/deleteGeoFence
+  description: |
+    Operations about login
+- name: tripapi/syncGeoFence
+  description: |
+    Operations about SyncGeoFenceController
+- name: tripapi/getOverSpeedCount
+  description: |
+    Operations about login

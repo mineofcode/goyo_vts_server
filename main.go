@@ -21,7 +21,6 @@ import (
 // import "goyo.in/gpstracker/crc16"
 
 func main() {
-
 	//	dataprocess.GetData()
 	startAll()
 }

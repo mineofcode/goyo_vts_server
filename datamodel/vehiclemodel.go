@@ -44,5 +44,6 @@ type (
 		D1       int         `bson:"d1" json:"d1"`
 		Sim      string      `bson:"sim" json:"sim"`
 		Clients  []string    `bson:"pushcl" json:"pushcl"`
+		Block    bool        `bson:"block" json:"block"`
 	}
 )

@@ -27,4 +27,6 @@ const (
 	ColMoM = "mom"
 	//ColMoM 'fuel' Collection
 	ColFuelEntry = "fuel"
+	//ColMoM 'fuel' Collection
+	ColLogFence = "logfence"
 )

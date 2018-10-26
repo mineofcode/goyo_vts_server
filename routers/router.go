@@ -1,23 +1,21 @@
 package routers
 
 import (
+	"fmt"
+
 	"github.com/astaxie/beego"
-	"github.com/astaxie/beego/plugins/cors"
 
 	"goyo.in/gpstracker/controllers"
-	ctrl "goyo.in/gpstracker/webapp/controllers"
 )
 
 func init() {
 
+	fmt.Println("Adding Router")
 	// namespaces
-	var namespaces []string = []string{"goyoapi", "another"}
 
 	//
-	beego.NSNamespace("/",
-		beego.NSRouter("/socket.io", &controllers.SocketController{}, "get:Teset"),
-	)
-	beego.AddNamespace(beego.NewNamespace("/"+namespaces[0],
+
+	ns := beego.NewNamespace("/goyoapi",
 		beego.NSNamespace("/tripapi/user",
 			beego.NSRouter("/login", &controllers.LoginController{}, "post:Login"),
 			beego.NSRouter("/logout", &controllers.LogoutController{}, "post:Logout"),
@@ -74,12 +72,14 @@ func init() {
 			),
 		),
 
-		//tripapi/deleteGeoFence
+		beego.NSNamespace("/tripapi/syncGeoFence",
+			beego.NSInclude(
+				&controllers.SyncGeoFenceController{},
+			),
+		),
 
 		beego.NSNamespace("/tripapi/vehicle",
-			beego.NSInclude(
-				&controllers.VehicleController{},
-			),
+			beego.NSRouter("", &controllers.VehicleController{}, "post:Post"),
 			beego.NSRouter("/getVehicleByUID", &controllers.VehicleController{}, "post:GetVehicleByUID"),
 			beego.NSRouter("/getVehicleDetails", &controllers.VehicleController{}, "post:GetVehicleDetails"),
 		),
@@ -107,27 +107,17 @@ func init() {
 			beego.NSRouter("/get", &controllers.FuelController{}, "post:Get"),
 			beego.NSRouter("/get/edit", &controllers.FuelController{}, "post:GetEdit"),
 		),
+		beego.NSNamespace("/tripapi/locations",
+			beego.NSRouter("/getnearbyvehicles", &controllers.LocationsController{}, "post:GetNearByVehicles"),
+		),
+	)
 
-		// beego.NSNamespace("/tripapi/locations",
-		// 	beego.NSInclude(
-		// 		&controllers.VehicleController{},
-		// 	),
-
-	))
+	beego.AddNamespace(ns)
 
 	//OverSpeed
 	//tripapi/deleteGeoFence
-
+	//
 	/*Web site*/
 	//tripapi/deleteGeoFence
-	beego.Router("/hello-world", &ctrl.MainController{})
-	beego.Router("view/device:imei", &ctrl.DeviceController{})
 
-	beego.InsertFilter("*", beego.BeforeRouter, cors.Allow(&cors.Options{
-		AllowAllOrigins:  true,
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Authorization", "Access-Control-Allow-Origin", "Content-Type"},
-		ExposeHeaders:    []string{"Content-Length", "Access-Control-Allow-Origin"},
-		AllowCredentials: true,
-	}))
 }

@@ -19,9 +19,15 @@ func GetHistoryData(param models.ParamsTripHistorydata, _sn *mgo.Session) (resul
 	return FungetHistoryData(param, _sn)
 }
 
+var _acc int = -1
+var _acc_lastTime time.Time
+var _accsegment []datamodel.AccSegmentArr
+
 //
 func FungetHistoryData(param models.ParamsTripHistorydata, _sn *mgo.Session) (result datamodel.SegmentWrapper, err error) {
-
+	_acc = -1
+	_acc_lastTime = time.Now()
+	_accsegment = nil
 	//"358735070927263", "2017-11-06T00:00:00+05:30"
 	res := models.GetDateData(param.Vhid, param.FromDt, _sn)
 
@@ -40,6 +46,7 @@ func FungetHistoryData(param models.ParamsTripHistorydata, _sn *mgo.Session) (re
 	var lasttm time.Time
 	var datacount = (len(res) - 1)
 	forDate, _ := time.Parse(time.RFC3339, param.FromDt)
+	forDate = forDate.UTC()
 	// var _loc []locdt
 
 	//non traveled variable
@@ -47,33 +54,42 @@ func FungetHistoryData(param models.ParamsTripHistorydata, _sn *mgo.Session) (re
 	var _nont_end_Lat []float64
 	var switcher string = ""
 	//////////////////////////////////////////////////////
+	// acc details
 
 	var _segment []datamodel.SegmentArr
 
 	for index, res1 := range res {
 
+		serTm := res1.Sertm.UTC()
+
+		//fmt.Println(serTm)
 		if res1.Actvt == "loc" {
+
+			if res1.Flag == "acc" {
+				generateAccSegment(res1, forDate, false)
+				continue
+			}
 
 			if lastLat == nil {
 				lastLat = res1.Loc
 				//frmt, _ := time.Parse(time.RFC3339, param.FromDt)
-				starttm = res1.Sertm
-				lasttm = res1.Sertm
+				starttm = serTm
+				lasttm = serTm
 
 			}
 			if maxSpeed < res1.Speed {
 				maxSpeed = res1.Speed
 				maxSpeedLoc = res1.Loc
-				maxSpeedTM = res1.Sertm
+				maxSpeedTM = serTm
 
 				if maxSpeed > total_MaxSpeed {
 					total_MaxSpeed = maxSpeed
 				}
 			}
-			//fmt.Println(res1.Sertm, lasttm)
-			isTMseg := isDifferentSegmentTime(res1.Sertm, lasttm)
+			//fmt.Println(serTm, lasttm)
+			isTMseg := isDifferentSegmentTime(serTm, lasttm)
 			isDistseg := isDifferentSegmentDist(lastLat, res1.Loc)
-			//fmt.Println("dt ", res1.Sertm)
+			//fmt.Println("dt ", serTm)
 			//fmt.Println("gpstm ", l.Time)
 			// fmt.Println(datacount, index)
 			if isDistseg || isTMseg || index == datacount {
@@ -99,7 +115,8 @@ func FungetHistoryData(param models.ParamsTripHistorydata, _sn *mgo.Session) (re
 						out := time.Time{}.Add(dur)
 						ploy := EncodeCoords(polyGonPoints)
 						sg := datamodel.SegmentArr{
-							Distance: dis / 1000, Duration: out.Format("15:04:05"),
+							Distance:    dis / 1000,
+							Duration:    out.Format("15:04:05"),
 							EncodPoly:   fmt.Sprintf("%s", ploy),
 							StartTm:     starttm,
 							EndTm:       lasttm,
@@ -118,7 +135,7 @@ func FungetHistoryData(param models.ParamsTripHistorydata, _sn *mgo.Session) (re
 					if switcher == "dashed" {
 						_nont_end_Lat = []float64{res1.Loc[1], res1.Loc[0]}
 
-						_dur := res1.Sertm.Sub(lasttm)
+						_dur := serTm.Sub(lasttm)
 						_out := time.Time{}.Add(_dur)
 
 						_latlon := [][]float64{
@@ -133,7 +150,7 @@ func FungetHistoryData(param models.ParamsTripHistorydata, _sn *mgo.Session) (re
 							//Loc:      _loc,
 							EncodPoly:   fmt.Sprintf("%s", _ploy),
 							StartTm:     lasttm,
-							EndTm:       res1.Sertm,
+							EndTm:       serTm,
 							MaxSpeed:    0,
 							MaxSpeedLoc: maxSpeedLoc,
 							MaxSpeedTM:  maxSpeedTM,
@@ -147,7 +164,7 @@ func FungetHistoryData(param models.ParamsTripHistorydata, _sn *mgo.Session) (re
 					dis = 0
 					maxSpeed = 0
 					lastLat = nil
-					//fmt.Println("reset date ", res1.Sertm)
+					//fmt.Println("reset date ", serTm)
 					//_loc = []locdt{}
 					polyGonPoints = [][]float64{{}}
 				}
@@ -156,17 +173,21 @@ func FungetHistoryData(param models.ParamsTripHistorydata, _sn *mgo.Session) (re
 			polyGonPoints = append(polyGonPoints, []float64{res1.Loc[1], res1.Loc[0]})
 			//_nont_end_Lat = []float64{res1.Loc[1], res1.Loc[0]}
 			//_loc = append(_loc, l) //append locations
-			//fmt.Println(res1.Sertm)
+			//fmt.Println(serTm)
 
 			if lastLat != nil {
 				dis += getDistance(res1.Loc, lastLat)
 				lastLat = res1.Loc
-				lasttm = res1.Sertm
+				lasttm = serTm
 
 				//fmt.Println(lasttm)
 			}
 
 		}
+
+	}
+	if datacount > 0 {
+		generateAccSegment(res[datacount], forDate, true)
 	}
 	out1 := time.Time{}.Add(movingDuration)
 
@@ -174,13 +195,104 @@ func FungetHistoryData(param models.ParamsTripHistorydata, _sn *mgo.Session) (re
 	//fmt.Println(out1.Format("15:04:05"))
 	_final_wrap := datamodel.SegmentWrapper{MaxSpeed: total_MaxSpeed,
 		Segments:     _segment,
+		ACCSegments:  _accsegment,
 		ToalDistance: total_distance / 1000,
 		TravelTime:   out1.Format("15:04:05"),
 		AvgSpeed:     avgSped,
 		Vhid:         param.Vhid,
 		Date:         forDate,
+		AccAvail:     len(_accsegment) > 0,
 	}
 	return _final_wrap, nil
+}
+
+func generateAccSegment(res1 models.TimeWiseData, forDate time.Time, isLast bool) {
+	// fmt.Println("acc")
+
+	typ := "stop"
+	in_acc := 1
+	iscontinue := false
+	if _acc == -1 {
+		_acc_lastTime = forDate
+	}
+	if isLast {
+		if res1.Acc == 0 {
+			in_acc = 1
+		} else {
+			in_acc = 0
+		}
+
+	} else {
+		in_acc = res1.Acc
+	}
+
+	serverTime := res1.Sertm.UTC()
+	// check if this is last record of array then set the data
+	if isLast == true {
+		if len(_accsegment) > 0 {
+
+			// 	serverEndTime := forDate.Add(time.Hour*time.Duration(23) +
+			// 		time.Minute*time.Duration(59) +
+			// 		time.Second*time.Duration(59))
+			// setting last segment value
+			lastsegment := _accsegment[len(_accsegment)-1]
+
+			serverTime = forDate.Add(time.Hour*time.Duration(23) +
+				time.Minute*time.Duration(59) +
+				time.Second*time.Duration(59))
+			if lastsegment.Type == "start" {
+				if time.Now().Before(serverTime) {
+					serverTime = time.Now().UTC()
+				} else {
+
+					iscontinue = true
+				}
+			} else {
+				durl := serverTime.Sub(lastsegment.StartTm)
+				outl := time.Time{}.Add(durl)
+
+				lastsegment.Duration = outl.Format("15:04:05")
+				lastsegment.EndTm = serverTime
+				_accsegment[len(_accsegment)-1] = lastsegment
+				return
+			}
+		}
+
+		// 	durl := serverEndTime.Sub(lastsegment.StartTm)
+		// 	outl := time.Time{}.Add(durl)
+
+		// 	lastsegment.Duration = outl.Format("15:04:05")
+		// 	lastsegment.EndTm = serverEndTime
+
+		// 	_accsegment[len(_accsegment)-1] = lastsegment
+		// } else {
+
+	}
+	//return
+
+	if in_acc == 1 {
+		typ = "stop"
+	} else {
+		typ = "start"
+	}
+
+	//fmt.Println(lastsegment.Type)
+	// data will start from this day morning 12:00 am to till res.Time
+	dur := serverTime.Sub(_acc_lastTime)
+	outx := time.Time{}.Add(dur)
+
+	sg := datamodel.AccSegmentArr{
+		Duration:   outx.Format("15:04:05"),
+		StartTm:    _acc_lastTime,
+		EndTm:      serverTime,
+		Point:      res1.Loc,
+		Type:       typ,
+		IsContinue: iscontinue,
+	}
+	_acc_lastTime = serverTime
+	_acc = in_acc
+	_accsegment = append(_accsegment, sg)
+
 }
 
 //GetVehicles ...

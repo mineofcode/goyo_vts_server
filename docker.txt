@@ -1,16 +1,30 @@
+-- goto this directory ~/goyo/GO/goyo.in/gpstracker   1>
+
+
 sudo docker ps
 sudo docker stop 
 sudo docker images
 sudo docker rmi 
-sudo docker build -t gpst .
+sudo docker build -t gpst .      -- this is command for building the docker build   2>
 sudo docker container ls --all
 sudo docker rm
 
 dependency
--- sudo docker run --net="host" -p 9851:9851 -t --rm --name tile38 tile38
+-- sudo service mongod start
+
+-- run this command first
+-- old version sudo docker run --net="host" -p 9851:9851 --restart unless-stopped -t --name tile tile38
+-- sudo docker run --net="host" -p 9851:9851 --restart unless-stopped -t --name tileserv tile38/tile38
+
+-- then this command for current verison
+
+sudo docker run --net="host" -p 6969:6969 -p 6979:6979 -p 27017:27017 -t --name gpstest gpstest
+
 
 
 sudo docker run --net="host" -p 6969:6969 -p 6979:6979 -p 27017:27017 --restart unless-stopped -t --name gpst gpst
+
+sudo docker run --net="host" -p 6969:6969 -p 6979:6979 -p 27017:27017 --restart unless-stopped -t --name oldimg oldimg
 
 --sudo docker run --net="host" -p 6969:6969 -p 6979:6979 -p 27017:27017 -t --rm --name oldimg oldimg
 

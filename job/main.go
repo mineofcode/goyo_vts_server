@@ -1,7 +1,6 @@
 package job
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/jasonlvhit/gocron"
@@ -45,7 +44,7 @@ func dailyHistroy(search interface{}) {
 
 		// checking for hostory
 		if vhs.Histtm.Year() == 1 {
-			frmt, _ := time.Parse(time.RFC3339, "2018-04-08T00:00:00+05:30")
+			frmt, _ := time.Parse(time.RFC3339, "2018-08-15T00:00:00+05:30")
 			vhs.Histtm = frmt
 		}
 
@@ -56,7 +55,7 @@ func dailyHistroy(search interface{}) {
 		//return
 		for vhs.Histtm = vhs.Histtm.AddDate(0, 0, 1); vhs.Histtm.Before(gmttime.AddDate(0, 0, -1)); vhs.Histtm = vhs.Histtm.AddDate(0, 0, 1) {
 			// do stuff with d
-			fmt.Println(vhs.Histtm)
+			// fmt.Println(vhs.Histtm)
 
 			if vhs.Histtm.Equal(gmttime) || vhs.Histtm.After(gmttime) {
 				continue

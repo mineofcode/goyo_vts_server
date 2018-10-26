@@ -15,6 +15,8 @@ type TimeWiseData struct {
 	Actvt string    `bson:"actvt"`
 	Speed int       `bson:"speed"`
 	Sertm time.Time `bson:"sertm"`
+	Flag  string    `bson:"flag"`
+	Acc   int       `bson:"acc"`
 }
 
 func GetDateData(vehid string, date string, _sn *mgo.Session) []TimeWiseData {
